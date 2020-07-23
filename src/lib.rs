@@ -53,9 +53,6 @@
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
 
-// feature(is_sorted) is only used in tests (see below)
-#![feature(is_sorted)]
-
 use std::cmp;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use log::warn;
@@ -255,6 +252,17 @@ mod tests {
     use async_std::sync::Arc;
     use futures::join;
 
+
+    fn is_sorted(vec: &Vec<Timestamp>) -> bool {
+        let mut it = vec.iter();
+        let mut ts = it.next().unwrap();
+        while let Some(next) = it.next() {
+            if next <= ts { return false };
+            ts = next;
+        }
+        true
+    }
+
     #[test]
     fn hlc_parallel() {
         task::block_on(async{
@@ -325,10 +333,10 @@ mod tests {
             let vecs = join!(t0, t1, t2, t3);
 
             // test that each timeseries is sorted (i.e. monotonic time)
-            assert!(vecs.0.iter().is_sorted());
-            assert!(vecs.1.iter().is_sorted());
-            assert!(vecs.2.iter().is_sorted());
-            assert!(vecs.3.iter().is_sorted());
+            assert!(is_sorted(&vecs.0));
+            assert!(is_sorted(&vecs.1));
+            assert!(is_sorted(&vecs.2));
+            assert!(is_sorted(&vecs.3));
 
             // test that there is no duplicate amongst all timestamps
             let mut all_times: Vec<Timestamp> =  vecs.0.into_iter()
