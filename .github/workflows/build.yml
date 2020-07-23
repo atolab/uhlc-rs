@@ -40,7 +40,9 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Generate doc
-      run: cargo doc --all --no-deps
+      run: |
+        cargo doc --all --no-deps
+        echo '<meta http-equiv=refresh content=0;url=uhlc/index.html>' > ./target/doc/index.html
 
     - name: Deploy doc
       uses: peaceiris/actions-gh-pages@v3
