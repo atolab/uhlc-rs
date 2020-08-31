@@ -8,18 +8,17 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use std::fmt;
 use super::NTP64;
+use std::fmt;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Timestamp {
     time: NTP64,
-    id: Vec<u8>
+    id: Vec<u8>,
 }
 
 impl Timestamp {
-
     // Create a [`Timestamp`] with a [`NTP64`] and a [`crate::HLC`]'s unique `id`.
     pub fn new(time: NTP64, id: Vec<u8>) -> Timestamp {
         Timestamp { time, id }
@@ -48,8 +47,6 @@ impl fmt::Debug for Timestamp {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -58,16 +55,17 @@ mod tests {
     #[test]
     fn test_timestamp() {
         let id1: Vec<u8> = vec![
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 
-            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10];
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+            0x0f, 0x10,
+        ];
         let id2: Vec<u8> = vec![
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 
-            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x11];
-    
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+            0x0f, 0x11,
+        ];
+
         let ts1_epoch = Timestamp::new(Default::default(), id1.clone());
         assert_eq!(ts1_epoch.get_time().to_system_time(), UNIX_EPOCH);
         assert_eq!(ts1_epoch.get_id(), &id1[..]);
-
 
         let ts2_epoch = Timestamp::new(Default::default(), id2.clone());
         assert_eq!(ts2_epoch.get_time().to_system_time(), UNIX_EPOCH);

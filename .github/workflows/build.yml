@@ -39,6 +39,8 @@ jobs:
       run: cargo clippy --all-targets
     - name: Run tests
       run: cargo test --verbose
+    - name: Run rustfmt
+      run: cargo fmt -- --check
     - name: Generate doc
       run: |
         cargo doc --all --no-deps
