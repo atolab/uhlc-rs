@@ -8,19 +8,19 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use super::NTP64;
+use super::{ID, NTP64};
 use std::fmt;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Timestamp {
     time: NTP64,
-    id: Vec<u8>,
+    id: ID,
 }
 
 impl Timestamp {
     // Create a [`Timestamp`] with a [`NTP64`] and a [`crate::HLC`]'s unique `id`.
-    pub fn new(time: NTP64, id: Vec<u8>) -> Timestamp {
+    pub fn new(time: NTP64, id: ID) -> Timestamp {
         Timestamp { time, id }
     }
 
@@ -30,46 +30,41 @@ impl Timestamp {
     }
 
     // Returns the [`crate::HLC`]'s unique `id`.
-    pub fn get_id(&self) -> &[u8] {
-        &self.id[..]
+    pub fn get_id(&self) -> &ID {
+        &self.id
     }
 }
 
 impl fmt::Display for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}/{}", self.time, hex::encode_upper(&self.id))
+        write!(f, "{}/{}", self.time, self.id)
     }
 }
 
 impl fmt::Debug for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}/{}", self.time, hex::encode_upper(&self.id))
+        write!(f, "{:?}/{:?}", self.time, self.id)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::*;
+    use std::convert::TryFrom;
     use std::time::UNIX_EPOCH;
 
     #[test]
     fn test_timestamp() {
-        let id1: Vec<u8> = vec![
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-            0x0f, 0x10,
-        ];
-        let id2: Vec<u8> = vec![
-            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-            0x0f, 0x11,
-        ];
+        let id1: ID = ID::try_from(vec![0x01].as_ref()).unwrap();
+        let id2: ID = ID::try_from(vec![0x02].as_ref()).unwrap();
 
         let ts1_epoch = Timestamp::new(Default::default(), id1.clone());
         assert_eq!(ts1_epoch.get_time().to_system_time(), UNIX_EPOCH);
-        assert_eq!(ts1_epoch.get_id(), &id1[..]);
+        assert_eq!(ts1_epoch.get_id(), &id1);
 
         let ts2_epoch = Timestamp::new(Default::default(), id2.clone());
         assert_eq!(ts2_epoch.get_time().to_system_time(), UNIX_EPOCH);
-        assert_eq!(ts2_epoch.get_id(), &id2[..]);
+        assert_eq!(ts2_epoch.get_id(), &id2);
 
         // Test that 2 Timestamps with same time but different ids are different and ordered
         assert_ne!(ts1_epoch, ts2_epoch);

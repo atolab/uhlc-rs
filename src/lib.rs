@@ -58,6 +58,9 @@ use log::warn;
 use std::cmp;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+mod id;
+pub use id::*;
+
 mod ntp64;
 pub use ntp64::*;
 
@@ -78,7 +81,7 @@ pub const DELTA_MS: u64 = 100;
 
 /// An Hybric Logical Clock generating [`Timestamp`]s
 pub struct HLC {
-    id: Vec<u8>,
+    id: ID,
     clock: fn() -> NTP64,
     delta: NTP64,
     last_time: Mutex<NTP64>,
@@ -104,11 +107,13 @@ impl HLC {
     /// use uhlc::HLC;
     ///
     /// # async_std::task::block_on(async {
-    /// let hlc = uhlc::HLC::with_clock(vec![0x01, 0x02, 0x03], uhlc::system_time_clock);
+    /// let hlc = HLC::with_clock(
+    ///     uuid::Uuid::new_v4().into(),
+    ///     uhlc::system_time_clock);
     /// println!("{}", hlc.new_timestamp().await);
     /// # })
     /// ```
-    pub fn with_clock(id: Vec<u8>, clock: fn() -> NTP64) -> HLC {
+    pub fn with_clock(id: ID, clock: fn() -> NTP64) -> HLC {
         let delta = NTP64::from(Duration::from_millis(DELTA_MS));
         HLC {
             id,
@@ -127,11 +132,11 @@ impl HLC {
     /// use uhlc::HLC;
     ///
     /// # async_std::task::block_on(async {
-    /// let hlc = uhlc::HLC::with_system_time(vec![0x01, 0x02, 0x03]);
+    /// let hlc = HLC::with_system_time(uuid::Uuid::new_v4().into());
     /// println!("{}", hlc.new_timestamp().await);
     /// # })
     /// ```
-    pub fn with_system_time(id: Vec<u8>) -> HLC {
+    pub fn with_system_time(id: ID) -> HLC {
         HLC::with_clock(id, system_time_clock)
     }
 
@@ -148,7 +153,7 @@ impl HLC {
     /// use uhlc::HLC;
     ///
     /// # async_std::task::block_on(async {
-    /// let hlc = uhlc::HLC::default();
+    /// let hlc = HLC::default();
     /// let ts1 =  hlc.new_timestamp().await;
     /// let ts2 =  hlc.new_timestamp().await;
     /// assert!(ts2 > ts1);
@@ -200,7 +205,7 @@ impl HLC {
         if *msg_time > now && *msg_time - now > self.delta {
             let err_msg = format!(
                 "incoming timestamp from {} exceeding delta {}ms is rejected: {} vs. now: {}",
-                hex::encode_upper(timestamp.get_id()),
+                timestamp.get_id(),
                 self.delta.to_duration().as_millis(),
                 msg_time,
                 now
@@ -226,7 +231,7 @@ impl Default for HLC {
     /// Create a new [`HLC`] with a generated UUID and using
     /// [`system_time_clock()`] as physical clock.
     fn default() -> Self {
-        HLC::with_system_time(uuid::Uuid::new_v4().as_bytes().to_vec())
+        HLC::with_system_time(uuid::Uuid::new_v4().into())
     }
 }
 
@@ -238,7 +243,7 @@ impl Default for HLC {
 ///
 /// ```
 /// # async_std::task::block_on(async {
-/// let hlc = uhlc::HLC::with_clock(vec![0x01, 0x02, 0x03], uhlc::system_time_clock);
+/// let hlc = uhlc::HLC::with_clock(uuid::Uuid::new_v4().into(), uhlc::system_time_clock);
 /// println!("{}", hlc.new_timestamp().await);
 /// # })
 /// ```
@@ -253,6 +258,7 @@ mod tests {
     use async_std::sync::Arc;
     use async_std::task;
     use futures::join;
+    use std::convert::TryFrom;
     use std::time::Duration;
 
     fn is_sorted(vec: &[Timestamp]) -> bool {
@@ -270,10 +276,10 @@ mod tests {
     #[test]
     fn hlc_parallel() {
         task::block_on(async {
-            let id0: Vec<u8> = vec![0x00];
-            let id1: Vec<u8> = vec![0x01];
-            let id2: Vec<u8> = vec![0x02];
-            let id3: Vec<u8> = vec![0x03];
+            let id0: ID = ID::try_from(vec![0x00].as_ref()).unwrap();
+            let id1: ID = ID::try_from(vec![0x01].as_ref()).unwrap();
+            let id2: ID = ID::try_from(vec![0x02].as_ref()).unwrap();
+            let id3: ID = ID::try_from(vec![0x03].as_ref()).unwrap();
             let hlc0 = Arc::new(HLC::with_system_time(id0.clone()));
             let hlc1 = Arc::new(HLC::with_system_time(id1.clone()));
             let hlc2 = Arc::new(HLC::with_system_time(id2.clone()));
@@ -360,9 +366,7 @@ mod tests {
     #[test]
     fn hlc_update_with_timestamp() {
         task::block_on(async {
-            let id: Vec<u8> = vec![
-                0x01, 0x02, 0x03, 0x04, 0x05, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-            ];
+            let id: ID = ID::from(uuid::Uuid::new_v4());
             let hlc = HLC::with_system_time(id.clone());
 
             // Test that updating with an old Timestamp don't break the HLC
