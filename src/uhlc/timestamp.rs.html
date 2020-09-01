@@ -79,11 +79,6 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">//</span>
 <span class="comment">// Copyright (c) 2017, 2020 ADLINK Technology Inc.</span>
@@ -95,19 +90,19 @@
 <span class="comment">//</span>
 <span class="comment">// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0</span>
 <span class="comment">//</span>
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">NTP64</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ID</span>, <span class="ident">NTP64</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
 
 <span class="doccomment">/// A timestamp made of a [`NTP64`] and a [`crate::HLC`]&#39;s unique identifier.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Timestamp</span> {
     <span class="ident">time</span>: <span class="ident">NTP64</span>,
-    <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">id</span>: <span class="ident">ID</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Timestamp</span> {
     <span class="comment">// Create a [`Timestamp`] with a [`NTP64`] and a [`crate::HLC`]&#39;s unique `id`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">time</span>: <span class="ident">NTP64</span>, <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Timestamp</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">time</span>: <span class="ident">NTP64</span>, <span class="ident">id</span>: <span class="ident">ID</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Timestamp</span> {
         <span class="ident">Timestamp</span> { <span class="ident">time</span>, <span class="ident">id</span> }
     }
 
@@ -117,46 +112,41 @@
     }
 
     <span class="comment">// Returns the [`crate::HLC`]&#39;s unique `id`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>[..]
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">ID</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Timestamp</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.<span class="ident">time</span>, <span class="ident">hex</span>::<span class="ident">encode_upper</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>))
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}/{}&quot;</span>, <span class="self">self</span>.<span class="ident">time</span>, <span class="self">self</span>.<span class="ident">id</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Timestamp</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}/{}&quot;</span>, <span class="self">self</span>.<span class="ident">time</span>, <span class="ident">hex</span>::<span class="ident">encode_upper</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>))
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}/{:?}&quot;</span>, <span class="self">self</span>.<span class="ident">time</span>, <span class="self">self</span>.<span class="ident">id</span>)
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">UNIX_EPOCH</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_timestamp</span>() {
-        <span class="kw">let</span> <span class="ident">id1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="number">0x01</span>, <span class="number">0x02</span>, <span class="number">0x03</span>, <span class="number">0x04</span>, <span class="number">0x05</span>, <span class="number">0x06</span>, <span class="number">0x07</span>, <span class="number">0x08</span>, <span class="number">0x09</span>, <span class="number">0x0a</span>, <span class="number">0x0b</span>, <span class="number">0x0c</span>, <span class="number">0x0d</span>, <span class="number">0x0e</span>,
-            <span class="number">0x0f</span>, <span class="number">0x10</span>,
-        ];
-        <span class="kw">let</span> <span class="ident">id2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="number">0x01</span>, <span class="number">0x02</span>, <span class="number">0x03</span>, <span class="number">0x04</span>, <span class="number">0x05</span>, <span class="number">0x06</span>, <span class="number">0x07</span>, <span class="number">0x08</span>, <span class="number">0x09</span>, <span class="number">0x0a</span>, <span class="number">0x0b</span>, <span class="number">0x0c</span>, <span class="number">0x0d</span>, <span class="number">0x0e</span>,
-            <span class="number">0x0f</span>, <span class="number">0x11</span>,
-        ];
+        <span class="kw">let</span> <span class="ident">id1</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x01</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">id2</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x02</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">ts1_epoch</span> <span class="op">=</span> <span class="ident">Timestamp</span>::<span class="ident">new</span>(<span class="ident">Default</span>::<span class="ident">default</span>(), <span class="ident">id1</span>.<span class="ident">clone</span>());
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts1_epoch</span>.<span class="ident">get_time</span>().<span class="ident">to_system_time</span>(), <span class="ident">UNIX_EPOCH</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts1_epoch</span>.<span class="ident">get_id</span>(), <span class="kw-2">&amp;</span><span class="ident">id1</span>[..]);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts1_epoch</span>.<span class="ident">get_id</span>(), <span class="kw-2">&amp;</span><span class="ident">id1</span>);
 
         <span class="kw">let</span> <span class="ident">ts2_epoch</span> <span class="op">=</span> <span class="ident">Timestamp</span>::<span class="ident">new</span>(<span class="ident">Default</span>::<span class="ident">default</span>(), <span class="ident">id2</span>.<span class="ident">clone</span>());
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts2_epoch</span>.<span class="ident">get_time</span>().<span class="ident">to_system_time</span>(), <span class="ident">UNIX_EPOCH</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts2_epoch</span>.<span class="ident">get_id</span>(), <span class="kw-2">&amp;</span><span class="ident">id2</span>[..]);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ts2_epoch</span>.<span class="ident">get_id</span>(), <span class="kw-2">&amp;</span><span class="ident">id2</span>);
 
         <span class="comment">// Test that 2 Timestamps with same time but different ids are different and ordered</span>
         <span class="macro">assert_ne</span><span class="macro">!</span>(<span class="ident">ts1_epoch</span>, <span class="ident">ts2_epoch</span>);
