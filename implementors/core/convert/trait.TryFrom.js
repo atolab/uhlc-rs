@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["uhlc"] = [{"text":"impl&lt;'_&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.TryFrom.html\" title=\"trait core::convert::TryFrom\">TryFrom</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.slice.html\">&amp;'_ [</a><a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a><a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.slice.html\">]</a>&gt; for <a class=\"struct\" href=\"uhlc/struct.ID.html\" title=\"struct uhlc::ID\">ID</a>","synthetic":false,"types":["uhlc::id::ID"]}];
+implementors["uhlc"] = [{"text":"impl&lt;'_&gt; TryFrom&lt;&amp;'_ [u8]&gt; for ID","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

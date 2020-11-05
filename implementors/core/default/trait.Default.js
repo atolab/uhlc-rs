@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["uhlc"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"uhlc/struct.NTP64.html\" title=\"struct uhlc::NTP64\">NTP64</a>","synthetic":false,"types":["uhlc::ntp64::NTP64"]},{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"uhlc/struct.HLC.html\" title=\"struct uhlc::HLC\">HLC</a>","synthetic":false,"types":["uhlc::HLC"]}];
+implementors["uhlc"] = [{"text":"impl Default for NTP64","synthetic":false,"types":[]},{"text":"impl Default for HLC","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
