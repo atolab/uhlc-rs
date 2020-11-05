@@ -376,14 +376,6 @@
 <span id="375">375</span>
 <span id="376">376</span>
 <span id="377">377</span>
-<span id="378">378</span>
-<span id="379">379</span>
-<span id="380">380</span>
-<span id="381">381</span>
-<span id="382">382</span>
-<span id="383">383</span>
-<span id="384">384</span>
-<span id="385">385</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">//</span>
 <span class="comment">// Copyright (c) 2017, 2020 ADLINK Technology Inc.</span>
@@ -397,37 +389,37 @@
 <span class="comment">//</span>
 
 <span class="doccomment">//! A Unique Hybrid Logical Clock.</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! This library is an implementation of an</span>
 <span class="doccomment">//! [Hybrid Logical Clock (HLC)](https://cse.buffalo.edu/tech-reports/2014-04.pdf)</span>
 <span class="doccomment">//! associated to a unique identifier.</span>
 <span class="doccomment">//! Thus, it is able to generate timestamps that are unique across a distributed system,</span>
 <span class="doccomment">//! without the need of a centralized time source.</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! # Quick Start</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! use uhlc::HLC;</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! # async_std::task::block_on(async {</span>
 <span class="doccomment">//! // create an HLC with a generated UUID and relying on SystemTime::now()</span>
 <span class="doccomment">//! let hlc = HLC::default();</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! // generate timestamps</span>
 <span class="doccomment">//! let ts1 = hlc.new_timestamp().await;</span>
 <span class="doccomment">//! let ts2 = hlc.new_timestamp().await;</span>
 <span class="doccomment">//! assert!(ts2 &gt; ts1);</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! // update the HLC with a timestamp incoming from another HLC</span>
 <span class="doccomment">//! // (typically remote, but not in this example...)</span>
 <span class="doccomment">//! let hlc2 = HLC::default();</span>
 <span class="doccomment">//! let other_ts = hlc2.new_timestamp().await;</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! if ! hlc.update_with_timestamp(&amp;other_ts).await.is_ok() {</span>
 <span class="doccomment">//!     println!(r#&quot;The incoming timestamp would make this HLC</span>
 <span class="doccomment">//!              to drift too much. You should refuse it!&quot;#);</span>
 <span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! </span>
 <span class="doccomment">//! let ts3 = hlc.new_timestamp().await;</span>
 <span class="doccomment">//! assert!(ts3 &gt; ts2);</span>
 <span class="doccomment">//! assert!(ts3 &gt; other_ts);</span>
@@ -440,13 +432,10 @@
     <span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://atolab.github.io/uhlc-rs/&quot;</span>
 )]</span>
 
-<span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
-<span class="kw">use</span> <span class="ident">log</span>::<span class="ident">warn</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">SystemTime</span>, <span class="ident">UNIX_EPOCH</span>};
-
-<span class="kw">mod</span> <span class="ident">id</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">id</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">log</span>::<span class="ident">warn</span>;
+<span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
 
 <span class="kw">mod</span> <span class="ident">ntp64</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ntp64</span>::<span class="kw-2">*</span>;
@@ -454,93 +443,90 @@
 <span class="kw">mod</span> <span class="ident">timestamp</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">timestamp</span>::<span class="kw-2">*</span>;
 
-<span class="doccomment">/// The size of counter part in [`NTP64`] (in bits)</span>
+<span class="doccomment">/// The size of counter part in [`NTP64`] (in bits) </span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CSIZE</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">4u8</span>;
 <span class="comment">// Bit-mask of the counter part within the 64 bits time</span>
 <span class="kw">const</span> <span class="ident">CMASK</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="number">1u64</span> <span class="op">&lt;&lt;</span> <span class="ident">CSIZE</span>) <span class="op">-</span> <span class="number">1u64</span>;
 <span class="comment">// Bit-mask of the logical clock part within the 64 bits time</span>
-<span class="kw">const</span> <span class="ident">LMASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="op">!</span><span class="ident">CMASK</span>;
+<span class="kw">const</span> <span class="ident">LMASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="op">!</span> <span class="ident">CMASK</span>;
 
 <span class="doccomment">/// HLC Delta in milliseconds: maximum accepted drift for an external timestamp.</span>
-<span class="doccomment">///</span>
+<span class="doccomment">/// </span>
 <span class="doccomment">/// I.e.: if an incoming timestamp has a time &gt; now() + delta, then the HLC is not updated.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DELTA_MS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">100</span>;
 
 <span class="doccomment">/// An Hybric Logical Clock generating [`Timestamp`]s</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HLC</span> {
-    <span class="ident">id</span>: <span class="ident">ID</span>,
-    <span class="ident">clock</span>: <span class="kw">fn</span>() <span class="op">-&gt;</span> <span class="ident">NTP64</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HLC</span>
+{
+    <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="ident">clock</span>: <span class="kw">fn</span> () <span class="op">-&gt;</span> <span class="ident">NTP64</span>,
     <span class="ident">delta</span>: <span class="ident">NTP64</span>,
-    <span class="ident">last_time</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span>,
+    <span class="ident">last_time</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span>
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">asynclock</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>:<span class="ident">expr</span>) <span class="op">=&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">g</span>) <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>.<span class="ident">try_lock</span>() {
-            <span class="ident">g</span>
-        } <span class="kw">else</span> {
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>.<span class="ident">lock</span>().<span class="kw">await</span>
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>:<span class="ident">expr</span>) <span class="op">=&gt;</span> (
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">g</span>) <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>.<span class="ident">try_lock</span>() { 
+            <span class="ident">g</span> 
+        } <span class="kw">else</span> { 
+            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">var</span>.<span class="ident">lock</span>().<span class="kw">await</span> 
         }
-    };
+    );
 }
 
-<span class="kw">impl</span> <span class="ident">HLC</span> {
+<span class="kw">impl</span> <span class="ident">HLC</span>
+{
     <span class="doccomment">/// Create a new [`HLC`] with an `id` (must be unique) and a `clock`</span>
     <span class="doccomment">/// (a function returning the current physical time as an [`NTP64`]).</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use uhlc::HLC;</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # async_std::task::block_on(async {</span>
-    <span class="doccomment">/// let hlc = HLC::with_clock(</span>
-    <span class="doccomment">///     uuid::Uuid::new_v4().into(),</span>
-    <span class="doccomment">///     uhlc::system_time_clock);</span>
+    <span class="doccomment">/// let hlc = uhlc::HLC::with_clock(vec![0x01, 0x02, 0x03], uhlc::system_time_clock);</span>
     <span class="doccomment">/// println!(&quot;{}&quot;, hlc.new_timestamp().await);</span>
     <span class="doccomment">/// # })</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_clock</span>(<span class="ident">id</span>: <span class="ident">ID</span>, <span class="ident">clock</span>: <span class="kw">fn</span>() <span class="op">-&gt;</span> <span class="ident">NTP64</span>) <span class="op">-&gt;</span> <span class="ident">HLC</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_clock</span>(<span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">clock</span>: <span class="kw">fn</span> () <span class="op">-&gt;</span> <span class="ident">NTP64</span>) <span class="op">-&gt;</span> <span class="ident">HLC</span>
+    {
         <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">NTP64</span>::<span class="ident">from</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">DELTA_MS</span>));
-        <span class="ident">HLC</span> {
-            <span class="ident">id</span>,
-            <span class="ident">clock</span>,
-            <span class="ident">delta</span>,
-            <span class="ident">last_time</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        }
+        <span class="ident">HLC</span> { <span class="ident">id</span>, <span class="ident">clock</span>, <span class="ident">delta</span>, <span class="ident">last_time</span>: <span class="ident">Default</span>::<span class="ident">default</span>() }
     }
 
     <span class="doccomment">/// Create a new [`HLC`] with an `id` (must be unique) and using</span>
     <span class="doccomment">/// [`system_time_clock()`] as physical clock.</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use uhlc::HLC;</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # async_std::task::block_on(async {</span>
-    <span class="doccomment">/// let hlc = HLC::with_system_time(uuid::Uuid::new_v4().into());</span>
+    <span class="doccomment">/// let hlc = uhlc::HLC::with_system_time(vec![0x01, 0x02, 0x03]);</span>
     <span class="doccomment">/// println!(&quot;{}&quot;, hlc.new_timestamp().await);</span>
     <span class="doccomment">/// # })</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_system_time</span>(<span class="ident">id</span>: <span class="ident">ID</span>) <span class="op">-&gt;</span> <span class="ident">HLC</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_system_time</span>(<span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">HLC</span>
+    {
         <span class="ident">HLC</span>::<span class="ident">with_clock</span>(<span class="ident">id</span>, <span class="ident">system_time_clock</span>)
     }
 
     <span class="doccomment">/// Generate a new [`Timestamp`].</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// This timestamp is unique in the system and is always greater</span>
     <span class="doccomment">/// than the latest timestamp generated by the HLC and than the</span>
     <span class="doccomment">/// latest incoming timestamp that was used to update this [`HLC`]</span>
     <span class="doccomment">/// (using [`HLC::update_with_timestamp()`]).</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use uhlc::HLC;</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # async_std::task::block_on(async {</span>
-    <span class="doccomment">/// let hlc = HLC::default();</span>
+    <span class="doccomment">/// let hlc = uhlc::HLC::default();</span>
     <span class="doccomment">/// let ts1 =  hlc.new_timestamp().await;</span>
     <span class="doccomment">/// let ts2 =  hlc.new_timestamp().await;</span>
     <span class="doccomment">/// assert!(ts2 &gt; ts1);</span>
@@ -559,19 +545,19 @@
     }
 
     <span class="doccomment">/// Update this [`HLC`] with a [`Timestamp`].</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// Typically, this timestamp should have been generated by another HLC.</span>
     <span class="doccomment">/// If the timestamp exceeds the current time of this HLC by more than [`DELTA_MS`]</span>
     <span class="doccomment">/// an [`Err`] is returned.</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// use uhlc::HLC;</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// # async_std::task::block_on(async {</span>
     <span class="doccomment">/// let hlc1 = HLC::default();</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// // update the HLC with a timestamp incoming from another HLC</span>
     <span class="doccomment">/// // (typically remote, but not in this example...)</span>
     <span class="doccomment">/// let hlc2 = HLC::default();</span>
@@ -580,7 +566,7 @@
     <span class="doccomment">///     println!(r#&quot;The incoming timestamp would make this HLC</span>
     <span class="doccomment">///              to drift too much. You should refuse it!&quot;#);</span>
     <span class="doccomment">/// }</span>
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// </span>
     <span class="doccomment">/// let ts = hlc1.new_timestamp().await;</span>
     <span class="doccomment">/// assert!(ts &gt; other_ts);</span>
     <span class="doccomment">/// # })</span>
@@ -590,13 +576,10 @@
         <span class="ident">now</span>.<span class="number">0</span> <span class="op">&amp;=</span> <span class="ident">LMASK</span>;
         <span class="kw">let</span> <span class="ident">msg_time</span> <span class="op">=</span> <span class="ident">timestamp</span>.<span class="ident">get_time</span>();
         <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">msg_time</span> <span class="op">&gt;</span> <span class="ident">now</span> <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">msg_time</span> <span class="op">-</span> <span class="ident">now</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">delta</span> {
-            <span class="kw">let</span> <span class="ident">err_msg</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
-                <span class="string">&quot;incoming timestamp from {} exceeding delta {}ms is rejected: {} vs. now: {}&quot;</span>,
-                <span class="ident">timestamp</span>.<span class="ident">get_id</span>(),
+            <span class="kw">let</span> <span class="ident">err_msg</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;incoming timestamp from {} exceeding delta {}ms is rejected: {} vs. now: {}&quot;</span>,
+                <span class="ident">hex</span>::<span class="ident">encode_upper</span>(<span class="ident">timestamp</span>.<span class="ident">get_id</span>()),
                 <span class="self">self</span>.<span class="ident">delta</span>.<span class="ident">to_duration</span>().<span class="ident">as_millis</span>(),
-                <span class="ident">msg_time</span>,
-                <span class="ident">now</span>
-            );
+                <span class="ident">msg_time</span>, <span class="ident">now</span>);
             <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">err_msg</span>);
             <span class="prelude-val">Err</span>(<span class="ident">err_msg</span>)
         } <span class="kw">else</span> {
@@ -605,7 +588,7 @@
             <span class="kw">if</span> <span class="ident">max_time</span> <span class="op">==</span> <span class="ident">now</span> {
                 <span class="kw-2">*</span><span class="ident">last_time</span> <span class="op">=</span> <span class="ident">now</span>;
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">max_time</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">msg_time</span> {
-                <span class="kw-2">*</span><span class="ident">last_time</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">msg_time</span> <span class="op">+</span> <span class="number">1</span>;
+                <span class="kw-2">*</span><span class="ident">last_time</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">msg_time</span> <span class="op">+</span> <span class="number">1</span>; 
             } <span class="kw">else</span> {
                 <span class="kw-2">*</span><span class="ident">last_time</span> <span class="op">+=</span> <span class="number">1</span>;
             }
@@ -618,19 +601,19 @@
     <span class="doccomment">/// Create a new [`HLC`] with a generated UUID and using</span>
     <span class="doccomment">/// [`system_time_clock()`] as physical clock.</span>
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">uuid</span>::<span class="ident">Uuid</span>::<span class="ident">new_v4</span>().<span class="ident">into</span>())
+        <span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">uuid</span>::<span class="ident">Uuid</span>::<span class="ident">new_v4</span>().<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>())
     }
 }
 
 <span class="doccomment">/// A physical clock relying on std::time::SystemTime::now().</span>
-<span class="doccomment">///</span>
+<span class="doccomment">/// </span>
 <span class="doccomment">/// It returns a NTP64 relative to std::time::UNIX_EPOCH (1st Jan 1970).</span>
-<span class="doccomment">///</span>
+<span class="doccomment">/// </span>
 <span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
+<span class="doccomment">/// </span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # async_std::task::block_on(async {</span>
-<span class="doccomment">/// let hlc = uhlc::HLC::with_clock(uuid::Uuid::new_v4().into(), uhlc::system_time_clock);</span>
+<span class="doccomment">/// let hlc = uhlc::HLC::with_clock(vec![0x01, 0x02, 0x03], uhlc::system_time_clock);</span>
 <span class="doccomment">/// println!(&quot;{}&quot;, hlc.new_timestamp().await);</span>
 <span class="doccomment">/// # })</span>
 <span class="doccomment">/// ```</span>
@@ -639,22 +622,21 @@
     <span class="ident">NTP64</span>::<span class="ident">from</span>(<span class="ident">SystemTime</span>::<span class="ident">now</span>().<span class="ident">duration_since</span>(<span class="ident">UNIX_EPOCH</span>).<span class="ident">unwrap</span>())
 }
 
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
+    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::{<span class="ident">Duration</span>};
     <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">task</span>;
+    <span class="kw">use</span> <span class="ident">async_std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
     <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">join</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
-    <span class="kw">fn</span> <span class="ident">is_sorted</span>(<span class="ident">vec</span>: <span class="kw-2">&amp;</span>[<span class="ident">Timestamp</span>]) <span class="op">-&gt;</span> <span class="ident">bool</span> {
+
+    <span class="kw">fn</span> <span class="ident">is_sorted</span>(<span class="ident">vec</span>: <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">iter</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ts</span> <span class="op">=</span> <span class="ident">it</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-        <span class="kw">for</span> <span class="ident">next</span> <span class="kw">in</span> <span class="ident">it</span> {
-            <span class="kw">if</span> <span class="ident">next</span> <span class="op">&lt;=</span> <span class="ident">ts</span> {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
-            };
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">next</span>) <span class="op">=</span> <span class="ident">it</span>.<span class="ident">next</span>() {
+            <span class="kw">if</span> <span class="ident">next</span> <span class="op">&lt;=</span> <span class="ident">ts</span> { <span class="kw">return</span> <span class="bool-val">false</span> };
             <span class="ident">ts</span> <span class="op">=</span> <span class="ident">next</span>;
         }
         <span class="bool-val">true</span>
@@ -662,11 +644,11 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">hlc_parallel</span>() {
-        <span class="ident">task</span>::<span class="ident">block_on</span>(<span class="kw">async</span> {
-            <span class="kw">let</span> <span class="ident">id0</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x00</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">id1</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x01</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">id2</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x02</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">id3</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">try_from</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x03</span>].<span class="ident">as_ref</span>()).<span class="ident">unwrap</span>();
+        <span class="ident">task</span>::<span class="ident">block_on</span>(<span class="kw">async</span>{
+            <span class="kw">let</span> <span class="ident">id0</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x00</span>];
+            <span class="kw">let</span> <span class="ident">id1</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x01</span>];
+            <span class="kw">let</span> <span class="ident">id2</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x02</span>];
+            <span class="kw">let</span> <span class="ident">id3</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0x03</span>];
             <span class="kw">let</span> <span class="ident">hlc0</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">id0</span>.<span class="ident">clone</span>()));
             <span class="kw">let</span> <span class="ident">hlc1</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">id1</span>.<span class="ident">clone</span>()));
             <span class="kw">let</span> <span class="ident">hlc2</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">id2</span>.<span class="ident">clone</span>()));
@@ -691,7 +673,7 @@
             <span class="kw">let</span> <span class="ident">t1</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">hlc1</span> <span class="op">=</span> <span class="ident">hlc1</span>.<span class="ident">clone</span>();
                 <span class="kw">let</span> <span class="ident">hlc2</span> <span class="op">=</span> <span class="ident">hlc2</span>.<span class="ident">clone</span>();
-                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span>  {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">times</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">10000</span>);
                     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">NB_TIME</span> {
                         <span class="kw">let</span> <span class="ident">ts</span> <span class="op">=</span> <span class="ident">hlc1</span>.<span class="ident">new_timestamp</span>().<span class="kw">await</span>;
@@ -704,7 +686,7 @@
             <span class="kw">let</span> <span class="ident">t2</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">hlc2</span> <span class="op">=</span> <span class="ident">hlc3</span>.<span class="ident">clone</span>();
                 <span class="kw">let</span> <span class="ident">hlc3</span> <span class="op">=</span> <span class="ident">hlc3</span>.<span class="ident">clone</span>();
-                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span>  {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">times</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">10000</span>);
                     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">NB_TIME</span> {
                         <span class="kw">let</span> <span class="ident">ts</span> <span class="op">=</span> <span class="ident">hlc2</span>.<span class="ident">new_timestamp</span>().<span class="kw">await</span>;
@@ -717,7 +699,7 @@
             <span class="kw">let</span> <span class="ident">t3</span> <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">hlc3</span> <span class="op">=</span> <span class="ident">hlc3</span>.<span class="ident">clone</span>();
                 <span class="kw">let</span> <span class="ident">hlc0</span> <span class="op">=</span> <span class="ident">hlc0</span>.<span class="ident">clone</span>();
-                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                <span class="ident">task</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span>  {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">times</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">10000</span>);
                     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">NB_TIME</span> {
                         <span class="kw">let</span> <span class="ident">ts</span> <span class="op">=</span> <span class="ident">hlc3</span>.<span class="ident">new_timestamp</span>().<span class="kw">await</span>;
@@ -736,26 +718,28 @@
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">is_sorted</span>(<span class="kw-2">&amp;</span><span class="ident">vecs</span>.<span class="number">3</span>));
 
             <span class="comment">// test that there is no duplicate amongst all timestamps</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">all_times</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">vecs</span>
-                .<span class="number">0</span>
-                .<span class="ident">into_iter</span>()
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">all_times</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span> <span class="op">=</span>  <span class="ident">vecs</span>.<span class="number">0</span>.<span class="ident">into_iter</span>()
                 .<span class="ident">chain</span>(<span class="ident">vecs</span>.<span class="number">1</span>.<span class="ident">into_iter</span>())
                 .<span class="ident">chain</span>(<span class="ident">vecs</span>.<span class="number">2</span>.<span class="ident">into_iter</span>())
                 .<span class="ident">chain</span>(<span class="ident">vecs</span>.<span class="number">3</span>.<span class="ident">into_iter</span>())
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;&gt;</span>();
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">NB_TIME</span> <span class="op">*</span> <span class="number">4</span>, <span class="ident">all_times</span>.<span class="ident">len</span>());
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">NB_TIME</span><span class="kw-2">*</span><span class="number">4</span>, <span class="ident">all_times</span>.<span class="ident">len</span>());
             <span class="ident">all_times</span>.<span class="ident">sort</span>();
             <span class="ident">all_times</span>.<span class="ident">dedup</span>();
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">NB_TIME</span> <span class="op">*</span> <span class="number">4</span>, <span class="ident">all_times</span>.<span class="ident">len</span>());
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">NB_TIME</span><span class="kw-2">*</span><span class="number">4</span>, <span class="ident">all_times</span>.<span class="ident">len</span>());
+
         });
     }
 
+
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">hlc_update_with_timestamp</span>() {
-        <span class="ident">task</span>::<span class="ident">block_on</span>(<span class="kw">async</span> {
-            <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">ID</span> <span class="op">=</span> <span class="ident">ID</span>::<span class="ident">from</span>(<span class="ident">uuid</span>::<span class="ident">Uuid</span>::<span class="ident">new_v4</span>());
+        <span class="ident">task</span>::<span class="ident">block_on</span>(<span class="kw">async</span>{
+            <span class="kw">let</span> <span class="ident">id</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+                <span class="number">0x01</span>, <span class="number">0x02</span>, <span class="number">0x03</span>, <span class="number">0x04</span>, <span class="number">0x05</span>, <span class="number">0x07</span>, <span class="number">0x08</span>,
+                <span class="number">0x09</span>, <span class="number">0x0a</span>, <span class="number">0x0b</span>, <span class="number">0x0c</span>, <span class="number">0x0d</span>, <span class="number">0x0e</span>, <span class="number">0x0f</span>];
             <span class="kw">let</span> <span class="ident">hlc</span> <span class="op">=</span> <span class="ident">HLC</span>::<span class="ident">with_system_time</span>(<span class="ident">id</span>.<span class="ident">clone</span>());
-
+        
             <span class="comment">// Test that updating with an old Timestamp don&#39;t break the HLC</span>
             <span class="kw">let</span> <span class="ident">past_ts</span> <span class="op">=</span> <span class="ident">Timestamp</span>::<span class="ident">new</span>(<span class="ident">Default</span>::<span class="ident">default</span>(), <span class="ident">id</span>.<span class="ident">clone</span>());
             <span class="kw">let</span> <span class="ident">now_ts</span> <span class="op">=</span> <span class="ident">hlc</span>.<span class="ident">new_timestamp</span>().<span class="kw">await</span>;
@@ -765,10 +749,9 @@
             <span class="comment">// Test that updating with a Timestamp exceeding the delta is refused</span>
             <span class="kw">let</span> <span class="ident">now_ts</span> <span class="op">=</span> <span class="ident">hlc</span>.<span class="ident">new_timestamp</span>().<span class="kw">await</span>;
             <span class="kw">let</span> <span class="ident">future_time</span> <span class="op">=</span> <span class="ident">now_ts</span>.<span class="ident">get_time</span>() <span class="op">+</span> <span class="ident">NTP64</span>::<span class="ident">from</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">500</span>));
-            <span class="kw">let</span> <span class="ident">future_ts</span> <span class="op">=</span> <span class="ident">Timestamp</span>::<span class="ident">new</span>(<span class="ident">future_time</span>, <span class="ident">id</span>.<span class="ident">clone</span>());
+            <span class="kw">let</span> <span class="ident">future_ts</span> <span class="op">=</span> <span class="ident">Timestamp</span>::<span class="ident">new</span>(<span class="ident">future_time</span> , <span class="ident">id</span>.<span class="ident">clone</span>());
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">hlc</span>.<span class="ident">update_with_timestamp</span>(<span class="kw-2">&amp;</span><span class="ident">future_ts</span>).<span class="kw">await</span>.<span class="ident">is_err</span>())
         });
     }
-}
-</pre></div>
+}</pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "uhlc";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
