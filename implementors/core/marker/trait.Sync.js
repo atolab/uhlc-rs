@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["uhlc"] = [{"text":"impl Sync for ID","synthetic":true,"types":[]},{"text":"impl Sync for ParseIDError","synthetic":true,"types":[]},{"text":"impl Sync for NTP64","synthetic":true,"types":[]},{"text":"impl Sync for ParseNTP64Error","synthetic":true,"types":[]},{"text":"impl Sync for Timestamp","synthetic":true,"types":[]},{"text":"impl Sync for ParseTimestampError","synthetic":true,"types":[]},{"text":"impl Sync for HLC","synthetic":true,"types":[]}];
+implementors["uhlc"] = [{"text":"impl Sync for ID","synthetic":true,"types":[]},{"text":"impl Sync for NTP64","synthetic":true,"types":[]},{"text":"impl Sync for Timestamp","synthetic":true,"types":[]},{"text":"impl Sync for HLC","synthetic":true,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

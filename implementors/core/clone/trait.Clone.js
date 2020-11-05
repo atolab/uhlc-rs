@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["uhlc"] = [{"text":"impl Clone for ID","synthetic":false,"types":[]},{"text":"impl Clone for ParseIDError","synthetic":false,"types":[]},{"text":"impl Clone for NTP64","synthetic":false,"types":[]},{"text":"impl Clone for ParseNTP64Error","synthetic":false,"types":[]},{"text":"impl Clone for Timestamp","synthetic":false,"types":[]},{"text":"impl Clone for ParseTimestampError","synthetic":false,"types":[]}];
+implementors["uhlc"] = [{"text":"impl Clone for ID","synthetic":false,"types":[]},{"text":"impl Clone for NTP64","synthetic":false,"types":[]},{"text":"impl Clone for Timestamp","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
