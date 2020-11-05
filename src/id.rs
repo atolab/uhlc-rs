@@ -12,6 +12,7 @@ use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
@@ -132,4 +133,21 @@ impl fmt::Display for ID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, f)
     }
+}
+
+impl FromStr for ID {
+    type Err = ParseIDError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        hex::decode(s)
+            .map_err(|e| ParseIDError {
+                cause: e.to_string(),
+            })
+            .and_then(|bytes| ID::try_from(bytes.as_slice()).map_err(|e| ParseIDError { cause: e }))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseIDError {
+    pub cause: String,
 }

@@ -10,6 +10,7 @@
 //
 use super::{ID, NTP64};
 use std::fmt;
+use std::str::FromStr;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -47,6 +48,31 @@ impl fmt::Debug for Timestamp {
     }
 }
 
+impl FromStr for Timestamp {
+    type Err = ParseTimestampError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.find('/') {
+            Some(i) => {
+                let (stime, srem) = s.split_at(i);
+                let time =
+                    NTP64::from_str(stime).map_err(|e| ParseTimestampError { cause: e.cause })?;
+                let id =
+                    ID::from_str(&srem[1..]).map_err(|e| ParseTimestampError { cause: e.cause })?;
+                Ok(Timestamp::new(time, id))
+            }
+            None => Err(ParseTimestampError {
+                cause: "No '/' found in String".into(),
+            }),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseTimestampError {
+    pub cause: String,
+}
+
 #[cfg(test)]
 mod tests {
     use crate::*;
@@ -77,5 +103,8 @@ mod tests {
         assert!(ts1_now < ts2_now);
         assert!(ts1_epoch < ts1_now);
         assert!(ts2_epoch < ts2_now);
+
+        let s = ts1_now.to_string();
+        assert_eq!(ts1_now, s.parse().unwrap());
     }
 }

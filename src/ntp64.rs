@@ -8,9 +8,10 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use humantime::format_rfc3339_nanos;
+use humantime::{format_rfc3339_nanos, parse_rfc3339};
 use std::fmt;
 use std::ops::{Add, AddAssign, Sub};
+use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 // maximal number of seconds that can be represented in the 32-bits part
@@ -150,4 +151,27 @@ impl From<Duration> for NTP64 {
         let nanos: u64 = duration.subsec_nanos().into();
         NTP64((secs << 32) + ((nanos * FRAC_PER_SEC) / NANO_PER_SEC) + 1)
     }
+}
+
+impl FromStr for NTP64 {
+    type Err = ParseNTP64Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        parse_rfc3339(s)
+            .map_err(|e| ParseNTP64Error {
+                cause: e.to_string(),
+            })
+            .and_then(|time| {
+                time.duration_since(UNIX_EPOCH)
+                    .map_err(|e| ParseNTP64Error {
+                        cause: e.to_string(),
+                    })
+            })
+            .map(NTP64::from)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseNTP64Error {
+    pub cause: String,
 }
