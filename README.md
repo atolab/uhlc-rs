@@ -9,8 +9,6 @@ A Unique Hybrid Logical Clock for Rust.
 This library is an implementation of an [Hybrid Logical Clock (HLC)](https://cse.buffalo.edu/tech-reports/2014-04.pdf) associated to a unique identifier. Thus, it is able to generate timestamps that are unique across a distributed system, without the need of a centralized time source.
 
 ## Usage
-Note that this library requires the usage of [async-std](https://async.rs/).
-
 Add this to your `Cargo.toml`:
 
 ```toml
@@ -26,10 +24,10 @@ use uhlc::*;
 let hlc = HLC::default();
 
 // generate a timestamp
-let ts = hlc.new_timestamp().await;
+let ts = hlc.new_timestamp();
 
 // update the HLC with a timestamp incoming from another HLC
-if ! hlc.update_with_timestamp(&other_ts).await.is_ok() {
+if ! hlc.update_with_timestamp(&other_ts).is_ok() {
     println!(r#"The incoming timestamp would make this HLC
              to drift too much. You should refuse it!"#);
 }

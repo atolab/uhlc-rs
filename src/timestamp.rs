@@ -21,16 +21,19 @@ pub struct Timestamp {
 
 impl Timestamp {
     // Create a [`Timestamp`] with a [`NTP64`] and a [`crate::HLC`]'s unique `id`.
+    #[inline]
     pub fn new(time: NTP64, id: ID) -> Timestamp {
         Timestamp { time, id }
     }
 
     // Returns the [`NTP64`] time.
+    #[inline]
     pub fn get_time(&self) -> &NTP64 {
         &self.time
     }
 
     // Returns the [`crate::HLC`]'s unique `id`.
+    #[inline]
     pub fn get_id(&self) -> &ID {
         &self.id
     }

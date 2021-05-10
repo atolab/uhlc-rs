@@ -22,29 +22,27 @@
 //! ```
 //! use uhlc::HLC;
 //!
-//! # async_std::task::block_on(async {
 //! // create an HLC with a generated UUID and relying on SystemTime::now()
 //! let hlc = HLC::default();
 //!
 //! // generate timestamps
-//! let ts1 = hlc.new_timestamp().await;
-//! let ts2 = hlc.new_timestamp().await;
+//! let ts1 = hlc.new_timestamp();
+//! let ts2 = hlc.new_timestamp();
 //! assert!(ts2 > ts1);
 //!
 //! // update the HLC with a timestamp incoming from another HLC
 //! // (typically remote, but not in this example...)
 //! let hlc2 = HLC::default();
-//! let other_ts = hlc2.new_timestamp().await;
+//! let other_ts = hlc2.new_timestamp();
 //!
-//! if ! hlc.update_with_timestamp(&other_ts).await.is_ok() {
+//! if ! hlc.update_with_timestamp(&other_ts).is_ok() {
 //!     println!(r#"The incoming timestamp would make this HLC
 //!              to drift too much. You should refuse it!"#);
 //! }
 //!
-//! let ts3 = hlc.new_timestamp().await;
+//! let ts3 = hlc.new_timestamp();
 //! assert!(ts3 > ts2);
 //! assert!(ts3 > other_ts);
-//! # })
 //! ```
 
 #![doc(
@@ -53,9 +51,9 @@
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
 
-use async_std::sync::Mutex;
 use log::warn;
 use std::cmp;
+use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 mod id;
@@ -87,12 +85,11 @@ pub struct HLC {
     last_time: Mutex<NTP64>,
 }
 
-macro_rules! asynclock {
+macro_rules! lock {
     ($var:expr) => {
-        if let Some(g) = $var.try_lock() {
-            g
-        } else {
-            $var.lock().await
+        match $var.try_lock() {
+            Ok(guard) => guard,
+            Err(_) => $var.lock().unwrap(),
         }
     };
 }
@@ -106,12 +103,10 @@ impl HLC {
     /// ```
     /// use uhlc::HLC;
     ///
-    /// # async_std::task::block_on(async {
     /// let hlc = HLC::with_clock(
     ///     uuid::Uuid::new_v4().into(),
     ///     uhlc::system_time_clock);
-    /// println!("{}", hlc.new_timestamp().await);
-    /// # })
+    /// println!("{}", hlc.new_timestamp());
     /// ```
     pub fn with_clock(id: ID, clock: fn() -> NTP64) -> HLC {
         let delta = NTP64::from(Duration::from_millis(DELTA_MS));
@@ -131,10 +126,8 @@ impl HLC {
     /// ```
     /// use uhlc::HLC;
     ///
-    /// # async_std::task::block_on(async {
     /// let hlc = HLC::with_system_time(uuid::Uuid::new_v4().into());
-    /// println!("{}", hlc.new_timestamp().await);
-    /// # })
+    /// println!("{}", hlc.new_timestamp());
     /// ```
     pub fn with_system_time(id: ID) -> HLC {
         HLC::with_clock(id, system_time_clock)
@@ -152,17 +145,15 @@ impl HLC {
     /// ```
     /// use uhlc::HLC;
     ///
-    /// # async_std::task::block_on(async {
     /// let hlc = HLC::default();
-    /// let ts1 =  hlc.new_timestamp().await;
-    /// let ts2 =  hlc.new_timestamp().await;
+    /// let ts1 =  hlc.new_timestamp();
+    /// let ts2 =  hlc.new_timestamp();
     /// assert!(ts2 > ts1);
-    /// # })
     /// ```
-    pub async fn new_timestamp(&self) -> Timestamp {
+    pub fn new_timestamp(&self) -> Timestamp {
         let mut now = (self.clock)();
         now.0 &= LMASK;
-        let mut last_time = asynclock!(self.last_time);
+        let mut last_time = lock!(self.last_time);
         if now.0 > (last_time.0 & LMASK) {
             *last_time = now
         } else {
@@ -182,23 +173,21 @@ impl HLC {
     /// ```
     /// use uhlc::HLC;
     ///
-    /// # async_std::task::block_on(async {
     /// let hlc1 = HLC::default();
     ///
     /// // update the HLC with a timestamp incoming from another HLC
     /// // (typically remote, but not in this example...)
     /// let hlc2 = HLC::default();
-    /// let other_ts = hlc2.new_timestamp().await;
-    /// if ! hlc1.update_with_timestamp(&other_ts).await.is_ok() {
+    /// let other_ts = hlc2.new_timestamp();
+    /// if ! hlc1.update_with_timestamp(&other_ts).is_ok() {
     ///     println!(r#"The incoming timestamp would make this HLC
     ///              to drift too much. You should refuse it!"#);
     /// }
     ///
-    /// let ts = hlc1.new_timestamp().await;
+    /// let ts = hlc1.new_timestamp();
     /// assert!(ts > other_ts);
-    /// # })
     /// ```
-    pub async fn update_with_timestamp(&self, timestamp: &Timestamp) -> Result<(), String> {
+    pub fn update_with_timestamp(&self, timestamp: &Timestamp) -> Result<(), String> {
         let mut now = (self.clock)();
         now.0 &= LMASK;
         let msg_time = timestamp.get_time();
@@ -213,7 +202,7 @@ impl HLC {
             warn!("{}", err_msg);
             Err(err_msg)
         } else {
-            let mut last_time = asynclock!(self.last_time);
+            let mut last_time = lock!(self.last_time);
             let max_time = cmp::max(cmp::max(now, *msg_time), *last_time);
             if max_time == now {
                 *last_time = now;
@@ -242,10 +231,8 @@ impl Default for HLC {
 /// # Examples
 ///
 /// ```
-/// # async_std::task::block_on(async {
 /// let hlc = uhlc::HLC::with_clock(uuid::Uuid::new_v4().into(), uhlc::system_time_clock);
-/// println!("{}", hlc.new_timestamp().await);
-/// # })
+/// println!("{}", hlc.new_timestamp());
 /// ```
 #[inline]
 pub fn system_time_clock() -> NTP64 {
@@ -294,8 +281,8 @@ mod tests {
                 task::spawn(async move {
                     let mut times: Vec<Timestamp> = Vec::with_capacity(10000);
                     for _ in 0..NB_TIME {
-                        let ts = hlc0.new_timestamp().await;
-                        assert!(hlc1.update_with_timestamp(&ts).await.is_ok());
+                        let ts = hlc0.new_timestamp();
+                        assert!(hlc1.update_with_timestamp(&ts).is_ok());
                         times.push(ts)
                     }
                     times
@@ -307,8 +294,8 @@ mod tests {
                 task::spawn(async move {
                     let mut times: Vec<Timestamp> = Vec::with_capacity(10000);
                     for _ in 0..NB_TIME {
-                        let ts = hlc1.new_timestamp().await;
-                        assert!(hlc2.update_with_timestamp(&ts).await.is_ok());
+                        let ts = hlc1.new_timestamp();
+                        assert!(hlc2.update_with_timestamp(&ts).is_ok());
                         times.push(ts)
                     }
                     times
@@ -320,8 +307,8 @@ mod tests {
                 task::spawn(async move {
                     let mut times: Vec<Timestamp> = Vec::with_capacity(10000);
                     for _ in 0..NB_TIME {
-                        let ts = hlc2.new_timestamp().await;
-                        assert!(hlc3.update_with_timestamp(&ts).await.is_ok());
+                        let ts = hlc2.new_timestamp();
+                        assert!(hlc3.update_with_timestamp(&ts).is_ok());
                         times.push(ts)
                     }
                     times
@@ -333,8 +320,8 @@ mod tests {
                 task::spawn(async move {
                     let mut times: Vec<Timestamp> = Vec::with_capacity(10000);
                     for _ in 0..NB_TIME {
-                        let ts = hlc3.new_timestamp().await;
-                        assert!(hlc0.update_with_timestamp(&ts).await.is_ok());
+                        let ts = hlc3.new_timestamp();
+                        assert!(hlc0.update_with_timestamp(&ts).is_ok());
                         times.push(ts)
                     }
                     times
@@ -365,21 +352,19 @@ mod tests {
 
     #[test]
     fn hlc_update_with_timestamp() {
-        task::block_on(async {
-            let id: ID = ID::from(uuid::Uuid::new_v4());
-            let hlc = HLC::with_system_time(id.clone());
+        let id: ID = ID::from(uuid::Uuid::new_v4());
+        let hlc = HLC::with_system_time(id.clone());
 
-            // Test that updating with an old Timestamp don't break the HLC
-            let past_ts = Timestamp::new(Default::default(), id.clone());
-            let now_ts = hlc.new_timestamp().await;
-            assert!(hlc.update_with_timestamp(&past_ts).await.is_ok());
-            assert!(hlc.new_timestamp().await > now_ts);
+        // Test that updating with an old Timestamp don't break the HLC
+        let past_ts = Timestamp::new(Default::default(), id.clone());
+        let now_ts = hlc.new_timestamp();
+        assert!(hlc.update_with_timestamp(&past_ts).is_ok());
+        assert!(hlc.new_timestamp() > now_ts);
 
-            // Test that updating with a Timestamp exceeding the delta is refused
-            let now_ts = hlc.new_timestamp().await;
-            let future_time = now_ts.get_time() + NTP64::from(Duration::from_millis(500));
-            let future_ts = Timestamp::new(future_time, id.clone());
-            assert!(hlc.update_with_timestamp(&future_ts).await.is_err())
-        });
+        // Test that updating with a Timestamp exceeding the delta is refused
+        let now_ts = hlc.new_timestamp();
+        let future_time = now_ts.get_time() + NTP64::from(Duration::from_millis(500));
+        let future_ts = Timestamp::new(future_time, id.clone());
+        assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
 }
