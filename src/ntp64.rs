@@ -9,10 +9,10 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use humantime::{format_rfc3339_nanos, parse_rfc3339};
-use std::fmt;
 use std::ops::{Add, AddAssign, Sub};
 use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{fmt, ops::SubAssign};
 
 // maximal number of seconds that can be represented in the 32-bits part
 const MAX_NB_SEC: u64 = (1u64 << 32) - 1;
@@ -129,6 +129,49 @@ impl Sub for NTP64 {
     #[inline]
     fn sub(self, other: Self) -> Self {
         Self(self.0 - other.0)
+    }
+}
+
+impl<'a> Sub<NTP64> for &'a NTP64 {
+    type Output = <NTP64 as Sub<NTP64>>::Output;
+
+    #[inline]
+    fn sub(self, other: NTP64) -> <NTP64 as Sub<NTP64>>::Output {
+        Sub::sub(*self, other)
+    }
+}
+
+impl Sub<&NTP64> for NTP64 {
+    type Output = <NTP64 as Sub<NTP64>>::Output;
+
+    #[inline]
+    fn sub(self, other: &NTP64) -> <NTP64 as Sub<NTP64>>::Output {
+        Sub::sub(self, *other)
+    }
+}
+
+impl Sub<&NTP64> for &NTP64 {
+    type Output = <NTP64 as Sub<NTP64>>::Output;
+
+    #[inline]
+    fn sub(self, other: &NTP64) -> <NTP64 as Sub<NTP64>>::Output {
+        Sub::sub(*self, *other)
+    }
+}
+
+impl Sub<u64> for NTP64 {
+    type Output = Self;
+
+    #[inline]
+    fn sub(self, other: u64) -> Self {
+        Self(self.0 - other)
+    }
+}
+
+impl SubAssign<u64> for NTP64 {
+    #[inline]
+    fn sub_assign(&mut self, other: u64) {
+        *self = Self(self.0 - other);
     }
 }
 

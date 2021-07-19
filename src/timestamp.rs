@@ -9,8 +9,8 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use super::{ID, NTP64};
-use std::str::FromStr;
 use std::{fmt, ops::Add, ops::Sub};
+use std::{str::FromStr, time::Duration};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -36,6 +36,12 @@ impl Timestamp {
     #[inline]
     pub fn get_id(&self) -> &ID {
         &self.id
+    }
+
+    // Returns the time difference between two timestamps as a [`Duration`].
+    #[inline]
+    pub fn get_diff_duration(&self, other: &Timestamp) -> Duration {
+        (self.time - other.time).to_duration()
     }
 }
 
@@ -71,70 +77,6 @@ impl FromStr for Timestamp {
     }
 }
 
-impl Add for Timestamp {
-    type Output = Self;
-
-    #[inline]
-    fn add(self, other: Self) -> Self::Output {
-        Self {
-            time: self.time + other.time,
-            id: if self.id > other.id {
-                self.id
-            } else {
-                other.id
-            },
-        }
-    }
-}
-
-impl Add<&Timestamp> for &Timestamp {
-    type Output = Timestamp;
-
-    #[inline]
-    fn add(self, other: &Timestamp) -> Self::Output {
-        Timestamp {
-            time: self.time + other.time,
-            id: if self.id > other.id {
-                self.id.clone()
-            } else {
-                other.id.clone()
-            },
-        }
-    }
-}
-
-impl Sub for Timestamp {
-    type Output = Self;
-
-    #[inline]
-    fn sub(self, other: Self) -> Self::Output {
-        Self {
-            time: self.time - other.time,
-            id: if self.id > other.id {
-                self.id
-            } else {
-                other.id
-            },
-        }
-    }
-}
-
-impl Sub<&Timestamp> for &Timestamp {
-    type Output = Timestamp;
-
-    #[inline]
-    fn sub(self, other: &Timestamp) -> Self::Output {
-        Timestamp {
-            time: self.time + other.time,
-            id: if self.id > other.id {
-                self.id.clone()
-            } else {
-                other.id.clone()
-            },
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseTimestampError {
     pub cause: String,
@@ -165,7 +107,7 @@ mod tests {
 
         let now = system_time_clock();
         let ts1_now = Timestamp::new(now, id1);
-        let ts2_now = Timestamp::new(now, id2.clone());
+        let ts2_now = Timestamp::new(now, id2);
         assert_ne!(ts1_now, ts2_now);
         assert!(ts1_now < ts2_now);
         assert!(ts1_epoch < ts1_now);
@@ -174,10 +116,7 @@ mod tests {
         let s = ts1_now.to_string();
         assert_eq!(ts1_now, s.parse().unwrap());
 
-        let add_ts = &ts1_now + &ts2_now;
-        assert_eq!(add_ts, Timestamp::new(now + now, id2.clone()));
-
-        let sub_ts = ts1_now - ts2_now;
-        assert_eq!(sub_ts, Timestamp::new(NTP64(0), id2));
+        let diff = ts1_now.get_diff_duration(&ts2_now);
+        assert_eq!(diff, Duration::from_secs(0));
     }
 }
