@@ -9,7 +9,7 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use super::{ID, NTP64};
-use std::{fmt, ops::Add, ops::Sub};
+use std::fmt;
 use std::{str::FromStr, time::Duration};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
