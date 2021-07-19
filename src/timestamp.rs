@@ -10,7 +10,7 @@
 //
 use super::{ID, NTP64};
 use std::fmt;
-use std::str::FromStr;
+use std::{str::FromStr, time::Duration};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -36,6 +36,12 @@ impl Timestamp {
     #[inline]
     pub fn get_id(&self) -> &ID {
         &self.id
+    }
+
+    // Returns the time difference between two timestamps as a [`Duration`].
+    #[inline]
+    pub fn get_diff_duration(&self, other: &Timestamp) -> Duration {
+        (self.time - other.time).to_duration()
     }
 }
 
@@ -109,5 +115,8 @@ mod tests {
 
         let s = ts1_now.to_string();
         assert_eq!(ts1_now, s.parse().unwrap());
+
+        let diff = ts1_now.get_diff_duration(&ts2_now);
+        assert_eq!(diff, Duration::from_secs(0));
     }
 }
