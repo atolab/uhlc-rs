@@ -8,6 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt;
@@ -39,7 +40,7 @@ use uuid::Uuid;
 /// let id = ID::from(Uuid::new_v4());
 /// assert_eq!(id.size(), 16);
 /// ```
-#[derive(Clone, Eq)]
+#[derive(Clone, Eq, Deserialize, Serialize)]
 pub struct ID {
     size: usize,
     id: [u8; ID::MAX_SIZE],
