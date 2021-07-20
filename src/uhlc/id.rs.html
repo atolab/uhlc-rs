@@ -152,6 +152,7 @@
 <span id="151">151</span>
 <span id="152">152</span>
 <span id="153">153</span>
+<span id="154">154</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">//</span>
 <span class="comment">// Copyright (c) 2017, 2020 ADLINK Technology Inc.</span>
@@ -163,6 +164,7 @@
 <span class="comment">//</span>
 <span class="comment">// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0</span>
 <span class="comment">//</span>
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::fmt</span>;
@@ -194,7 +196,7 @@
 <span class="doccomment">/// let id = ID::from(Uuid::new_v4());</span>
 <span class="doccomment">/// assert_eq!(id.size(), 16);</span>
 <span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ID</span> {
     <span class="ident">size</span>: <span class="ident">usize</span>,
     <span class="ident">id</span>: [<span class="ident">u8</span>; <span class="ident">ID::MAX_SIZE</span>],

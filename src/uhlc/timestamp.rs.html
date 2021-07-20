@@ -133,11 +133,11 @@
 <span class="comment">// SPDX-License-Identifier: EPL-2.0 OR Apache-2.0</span>
 <span class="comment">//</span>
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ID</span>, <span class="ident">NTP64</span>};
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">str::FromStr</span>, <span class="ident">time::Duration</span>};
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">str::FromStr</span>, <span class="ident">time::Duration</span>};
 
 <span class="doccomment">/// A timestamp made of a [`NTP64`] and a [`crate::HLC`]&#39;s unique identifier.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Timestamp</span> {
     <span class="ident">time</span>: <span class="ident">NTP64</span>,
     <span class="ident">id</span>: <span class="ident">ID</span>,
