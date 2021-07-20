@@ -9,6 +9,7 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use humantime::{format_rfc3339_nanos, parse_rfc3339};
+use serde::{Deserialize, Serialize};
 use std::ops::{Add, AddAssign, Sub};
 use std::str::FromStr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -35,7 +36,7 @@ const NANO_PER_SEC: u64 = 1_000_000_000;
 /// Note that this timestamp in actually similar to a [`std::time::Duration`], as it doesn't
 /// define an EPOCH. Only the [`NTP64::to_system_time()`] and [`std::fmt::Display::fmt()`] operations assume that
 /// it's relative to UNIX_EPOCH (1st Jan 1970) to display the timpestamp in RFC-3339 format.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Deserialize, Serialize)]
 pub struct NTP64(pub u64);
 
 impl NTP64 {

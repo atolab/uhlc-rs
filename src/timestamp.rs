@@ -9,11 +9,11 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use super::{ID, NTP64};
-use std::fmt;
-use std::{str::FromStr, time::Duration};
+use serde::{Deserialize, Serialize};
+use std::{fmt, str::FromStr, time::Duration};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct Timestamp {
     time: NTP64,
     id: ID,
