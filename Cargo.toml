@@ -29,7 +29,7 @@ uuid = { version = "0.8", features = ["v4"] }
 hex = "0.4.2"
 humantime = "2.0"
 log = "0.4"
-serde = { version = "1.0.55", features = ["derive", "rc"] }
+serde = { version = "1.0.55", features = ["derive"] }
 
 [dev-dependencies]
 futures = "0.3"
