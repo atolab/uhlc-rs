@@ -368,6 +368,20 @@
 <span id="368">368</span>
 <span id="369">369</span>
 <span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
 </pre><pre class="rust">
 <span class="comment">//</span>
 <span class="comment">// Copyright (c) 2017, 2020 ADLINK Technology Inc.</span>
@@ -422,8 +436,10 @@
     <span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://atolab.github.io/uhlc-rs/&quot;</span>
 )]</span>
 
+<span class="kw">use</span> <span class="ident">lazy_static::lazy_static</span>;
 <span class="kw">use</span> <span class="ident">log::warn</span>;
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
+<span class="kw">use</span> <span class="ident">std::env::var</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Mutex</span>;
 <span class="kw">use</span> <span class="ident">std::time</span>::{<span class="ident">Duration</span>, <span class="ident">SystemTime</span>, <span class="ident">UNIX_EPOCH</span>};
 
@@ -443,10 +459,22 @@
 <span class="comment">// Bit-mask of the logical clock part within the 64 bits time</span>
 <span class="kw">const</span> <span class="ident">LMASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="op">!</span><span class="ident">CMASK</span>;
 
-<span class="doccomment">/// HLC Delta in milliseconds: maximum accepted drift for an external timestamp.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// I.e.: if an incoming timestamp has a time &gt; now() + delta, then the HLC is not updated.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DELTA_MS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">100</span>;
+<span class="comment">// HLC Delta in milliseconds: maximum accepted drift for an external timestamp.</span>
+<span class="comment">// I.e.: if an incoming timestamp has a time &gt; now() + delta, then the HLC is not updated.</span>
+<span class="kw">const</span> <span class="ident">DEFAULT_DELTA_MS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">100</span>;
+<span class="macro">lazy_static!</span> {
+    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">DELTA_MS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>(<span class="string">&quot;UHLC_MAX_DELTA_MS&quot;</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="macro">panic!</span>(
+            <span class="string">&quot;Error parsing environment variable ${{UHLC_MAX_DELTA_MS}}={} : {}&quot;</span>,
+            <span class="ident">s</span>, <span class="ident">e</span>
+        )),
+        <span class="prelude-val">Err</span>(<span class="ident">std::env::VarError::NotPresent</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DEFAULT_DELTA_MS</span>,
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(
+            <span class="string">&quot;Error parsing environment variable ${{UHLC_MAX_DELTA_MS}}: {}&quot;</span>,
+            <span class="ident">e</span>
+        ),
+    };
+}
 
 <span class="doccomment">/// An Hybric Logical Clock generating [`Timestamp`]s</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HLC</span> {
@@ -480,7 +508,7 @@
     <span class="doccomment">/// println!(&quot;{}&quot;, hlc.new_timestamp());</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_clock</span>(<span class="ident">id</span>: <span class="ident">ID</span>, <span class="ident">clock</span>: <span class="kw">fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HLC</span> {
-        <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">NTP64::from</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">DELTA_MS</span>));
+        <span class="kw">let</span> <span class="ident">delta</span> <span class="op">=</span> <span class="ident">NTP64::from</span>(<span class="ident">Duration::from_millis</span>(<span class="kw-2">*</span><span class="ident">DELTA_MS</span>));
         <span class="ident">HLC</span> {
             <span class="ident">id</span>,
             <span class="ident">clock</span>,
