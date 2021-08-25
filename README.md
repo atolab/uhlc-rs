@@ -86,9 +86,10 @@ in `uhlc::CSIZE`.
 
 To avoid a "too fast clock" to make an HLC drift too much in the future, the
 `uhlc::HLC::update_with_timestamp(timestamp)` operation will return an error if the
-incoming timestamp exceeds the current physical time more than a delta (currently
-hard-coded to 100ms). In such case, it could be wise to refuse or drop the incoming
-event, since it might not be correctly ordered with further events.
+incoming timestamp exceeds the current physical time more than a delta
+(100ms by default, configurable declaring the `UHLC_MAX_DELTA_MS` environment variable).
+In such case, it could be wise to refuse or drop the incoming event,
+since it might not be correctly ordered with further events.
 
 ## Usages
 **uhlc** is currently used in [Eclipse zenoh](https://github.com/eclipse-zenoh/zenoh).

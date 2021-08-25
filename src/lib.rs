@@ -51,8 +51,10 @@
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
 
+use lazy_static::lazy_static;
 use log::warn;
 use std::cmp;
+use std::env::var;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -72,10 +74,22 @@ const CMASK: u64 = (1u64 << CSIZE) - 1u64;
 // Bit-mask of the logical clock part within the 64 bits time
 const LMASK: u64 = !CMASK;
 
-/// HLC Delta in milliseconds: maximum accepted drift for an external timestamp.
-///
-/// I.e.: if an incoming timestamp has a time > now() + delta, then the HLC is not updated.
-pub const DELTA_MS: u64 = 100;
+// HLC Delta in milliseconds: maximum accepted drift for an external timestamp.
+// I.e.: if an incoming timestamp has a time > now() + delta, then the HLC is not updated.
+const DEFAULT_DELTA_MS: u64 = 100;
+lazy_static! {
+    static ref DELTA_MS: u64 = match var("UHLC_MAX_DELTA_MS") {
+        Ok(s) => s.parse().unwrap_or_else(|e| panic!(
+            "Error parsing environment variable ${{UHLC_MAX_DELTA_MS}}={} : {}",
+            s, e
+        )),
+        Err(std::env::VarError::NotPresent) => DEFAULT_DELTA_MS,
+        Err(e) => panic!(
+            "Error parsing environment variable ${{UHLC_MAX_DELTA_MS}}: {}",
+            e
+        ),
+    };
+}
 
 /// An Hybric Logical Clock generating [`Timestamp`]s
 pub struct HLC {
@@ -109,7 +123,7 @@ impl HLC {
     /// println!("{}", hlc.new_timestamp());
     /// ```
     pub fn with_clock(id: ID, clock: fn() -> NTP64) -> HLC {
-        let delta = NTP64::from(Duration::from_millis(DELTA_MS));
+        let delta = NTP64::from(Duration::from_millis(*DELTA_MS));
         HLC {
             id,
             clock,
