@@ -40,7 +40,7 @@ use uuid::Uuid;
 /// let id = ID::from(Uuid::new_v4());
 /// assert_eq!(id.size(), 16);
 /// ```
-#[derive(Clone, Eq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Eq, Deserialize, Serialize)]
 pub struct ID {
     size: usize,
     id: [u8; ID::MAX_SIZE],

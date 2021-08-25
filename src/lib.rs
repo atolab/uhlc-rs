@@ -159,7 +159,7 @@ impl HLC {
         } else {
             *last_time += 1;
         }
-        Timestamp::new(*last_time, self.id.clone())
+        Timestamp::new(*last_time, self.id)
     }
 
     /// Update this [`HLC`] with a [`Timestamp`].

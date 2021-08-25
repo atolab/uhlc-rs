@@ -61,13 +61,13 @@ impl NTP64 {
 
     /// Convert to a [`Duration`].
     #[inline]
-    pub fn to_duration(&self) -> Duration {
+    pub fn to_duration(self) -> Duration {
         Duration::new(self.as_secs().into(), self.subsec_nanos())
     }
 
     /// Convert to a [`SystemTime`] (making the assumption that this NTP64 is relative to [`UNIX_EPOCH`]).
     #[inline]
-    pub fn to_system_time(&self) -> SystemTime {
+    pub fn to_system_time(self) -> SystemTime {
         UNIX_EPOCH + self.to_duration()
     }
 }
