@@ -13,7 +13,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uhlc = "0.2"
+uhlc = "0.4"
 ```
 
 Then in your code:
@@ -67,14 +67,17 @@ be correlated. I.e.:
    between those events (one is not a consequence of the other).
 
 ## Implementation details
-The `uhlc::HLC` struct is created with 2 parameters:
- * a unique identifier (as a `uhlc::ID`)
- * a physical clock function (as a `fn () -> NTP64`)
-
 The `uhlc::HLC::default()` operation generate an UUIDv4 as identifier and uses
-`std::time::SystemTime::now()` as physical clock.
-But the `uhlc::HLC::with_clock(id, clock)` operation allows you to provide your
-own unique id and physical clock.
+`std::time::SystemTime::now()` as physical clock.  
+But using the `uhlc::HLCBuilder` allows you to configure the `HLC` differently. Example:  
+```Rust
+let custom_hlc = HLCBuilder::new()
+    .with_id(ID::try_from(vec![0x01, 0x02, 0x03].as_ref()).unwrap())  // use a custom identifier
+    .with_clock(my_custom_gps_clock)                                  // use a custom physical clock (e.g. using GPS as time source)
+    .with_max_delta(Duration::from_secs(1))                           // use a custom maximum delta (see explanations below)
+    .build();
+
+```
 
 A `uhlc::HLC::NTP64` time is 64-bits unsigned integer as specified in
 [RFC-5909](https://tools.ietf.org/html/rfc5905#section-6).
