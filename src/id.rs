@@ -113,7 +113,7 @@ impl PartialOrd for ID {
 impl Ord for ID {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
-        self.as_slice().cmp(&other.as_slice())
+        self.as_slice().cmp(other.as_slice())
     }
 }
 
