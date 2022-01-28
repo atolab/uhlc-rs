@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, str::FromStr, time::Duration};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct Timestamp {
     time: NTP64,
     id: ID,
