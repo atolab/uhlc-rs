@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;ntp64.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ntp64.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;www.rust-lang.org&#x2F;favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../uhlc/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;www.rust-lang.org&#x2F;logos&#x2F;rust-logo-128x128-blk.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;ntp64.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ntp64.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="https:&#x2F;&#x2F;www.rust-lang.org&#x2F;favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../uhlc/index.html'><div class='logo-container rust-logo'><img src='https:&#x2F;&#x2F;www.rust-lang.org&#x2F;logos&#x2F;rust-logo-128x128-blk.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -257,38 +258,38 @@
 <span class="doccomment">/// Note that this timestamp in actually similar to a [`std::time::Duration`], as it doesn&#39;t</span>
 <span class="doccomment">/// define an EPOCH. Only the [`NTP64::to_system_time()`] and [`std::fmt::Display::fmt()`] operations assume that</span>
 <span class="doccomment">/// it&#39;s relative to UNIX_EPOCH (1st Jan 1970) to display the timpestamp in RFC-3339 format.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Default</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Default</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NTP64</span>(<span class="kw">pub</span> <span class="ident">u64</span>);
 
 <span class="kw">impl</span> <span class="ident">NTP64</span> {
     <span class="doccomment">/// Returns this NTP64 as a u64.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="number">0</span>
     }
 
     <span class="doccomment">/// Returns the 32-bits seconds part.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_secs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_secs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         (<span class="self">self</span>.<span class="number">0</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>
     }
 
     <span class="doccomment">/// Returns the 32-bits fraction of second part converted to nanoseconds.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">subsec_nanos</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">subsec_nanos</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">frac</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">&amp;</span> <span class="ident">FRAC_MASK</span>;
         ((<span class="ident">frac</span> <span class="op">*</span> <span class="ident">NANO_PER_SEC</span>) <span class="op">/</span> <span class="ident">FRAC_PER_SEC</span>) <span class="kw">as</span> <span class="ident">u32</span>
     }
 
     <span class="doccomment">/// Convert to a [`Duration`].</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_duration</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Duration</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_duration</span>(<span class="self">self</span>) -&gt; <span class="ident">Duration</span> {
         <span class="ident">Duration::new</span>(<span class="self">self</span>.<span class="ident">as_secs</span>().<span class="ident">into</span>(), <span class="self">self</span>.<span class="ident">subsec_nanos</span>())
     }
 
     <span class="doccomment">/// Convert to a [`SystemTime`] (making the assumption that this NTP64 is relative to [`UNIX_EPOCH`]).</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_system_time</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SystemTime</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_system_time</span>(<span class="self">self</span>) -&gt; <span class="ident">SystemTime</span> {
         <span class="ident">UNIX_EPOCH</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">to_duration</span>()
     }
 }
@@ -297,7 +298,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">other</span>.<span class="number">0</span>)
     }
 }
@@ -306,7 +307,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Add::add</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">other</span>)
     }
 }
@@ -315,7 +316,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Add::add</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>)
     }
 }
@@ -324,7 +325,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Add::add</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>)
     }
 }
@@ -333,14 +334,14 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">other</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">AddAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">other</span>);
     }
 }
@@ -349,7 +350,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">other</span>.<span class="number">0</span>)
     }
 }
@@ -358,7 +359,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Sub::sub</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="ident">other</span>)
     }
 }
@@ -367,7 +368,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Sub::sub</span>(<span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>)
     }
 }
@@ -376,7 +377,7 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">NTP64</span>) -&gt; <span class="op">&lt;</span><span class="ident">NTP64</span> <span class="kw">as</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">NTP64</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Output</span> {
         <span class="ident">Sub::sub</span>(<span class="kw-2">*</span><span class="self">self</span>, <span class="kw-2">*</span><span class="ident">other</span>)
     }
 }
@@ -385,32 +386,32 @@
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">other</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">SubAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">sub_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="ident">u64</span>) {
         <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">-</span> <span class="ident">other</span>);
     }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">format_rfc3339_nanos</span>(<span class="self">self</span>.<span class="ident">to_system_time</span>()))
     }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:x}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">duration</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NTP64</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">duration</span>: <span class="ident">Duration</span>) -&gt; <span class="ident">NTP64</span> {
         <span class="kw">let</span> <span class="ident">secs</span> <span class="op">=</span> <span class="ident">duration</span>.<span class="ident">as_secs</span>();
         <span class="macro">assert!</span>(<span class="ident">secs</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">MAX_NB_SEC</span>);
         <span class="kw">let</span> <span class="ident">nanos</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">duration</span>.<span class="ident">subsec_nanos</span>().<span class="ident">into</span>();
@@ -421,7 +422,7 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">NTP64</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">ParseNTP64Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="ident">parse_rfc3339</span>(<span class="ident">s</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">ParseNTP64Error</span> {
                 <span class="ident">cause</span>: <span class="ident">e</span>.<span class="ident">to_string</span>(),
@@ -442,5 +443,4 @@
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uhlc" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
 </body></html>
