@@ -8,13 +8,15 @@
 #
 # SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 #
-name: build
+name: release
 
-on: [push, pull_request]
+on:
+  release:
+    types: [published]
 
 jobs:
-  build:
-    name: Build on ubuntu-latest
+  release:
+    name: Build and release
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +46,14 @@ jobs:
         run: |
           cargo doc --all --no-deps
           echo '<meta http-equiv=refresh content=0;url=uhlc/index.html>' > ./target/doc/index.html
+
+      - name: Publish to crates.io
+        run: |
+          cargo login ${{ secrets.CRATES_IO_TOKEN }}
+          cargo publish
+
+      - name: Deploy doc
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
