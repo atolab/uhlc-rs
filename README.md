@@ -2,7 +2,7 @@
 
 [![build](https://github.com/atolab/uhlc-rs/workflows/build/badge.svg)](https://github.com/atolab/uhlc-rs/actions?query=workflow%3Abuild)
 [![crate](https://img.shields.io/crates/v/uhlc.svg)](https://crates.io/crates/uhlc)
-[![API](https://img.shields.io/badge/api-master-yellow.svg)](https://atolab.github.io/uhlc-rs)
+[![API](https://img.shields.io/badge/api-latest-green.svg)](https://atolab.github.io/uhlc-rs)
 
 A Unique Hybrid Logical Clock for Rust.
 
