@@ -24,6 +24,12 @@ categories = ["date-and-time"]
 authors = ["Julien Enoch <julien.enoch@adlinktech.com>"]
 edition = "2018"
 
+[features]
+default=["epoch_unix"]
+epoch_unix=[]
+epoch_2000=[]
+epoch_2020=[]
+
 [dependencies]
 uuid = { version = "0.8", features = ["v4"] }
 hex = "0.4"

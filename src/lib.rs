@@ -56,7 +56,7 @@ use log::warn;
 use std::cmp;
 use std::env::var;
 use std::sync::Mutex;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 mod id;
 pub use id::*;
@@ -66,6 +66,22 @@ pub use ntp64::*;
 
 mod timestamp;
 pub use timestamp::*;
+
+#[cfg(feature = "epoch_unix")]
+lazy_static! {
+    /// The EPOCH used for all generated and deserialized [`Timestamp`]s
+    pub static ref EPOCH: SystemTime = std::time::UNIX_EPOCH;
+}
+#[cfg(feature = "epoch_2000")]
+lazy_static! {
+    /// The EPOCH used for all generated and deserialized [`Timestamp`]s
+    pub static ref EPOCH: SystemTime = "2000-01-01T00:00:00Z".parse::<humantime::Timestamp>().unwrap().into();
+}
+#[cfg(feature = "epoch_2020")]
+lazy_static! {
+    /// The EPOCH used for all generated and deserialized [`Timestamp`]s
+    pub static ref EPOCH: SystemTime = "2020-01-01T00:00:00Z".parse::<humantime::Timestamp>().unwrap().into();
+}
 
 /// The size of counter part in [`NTP64`] (in bits)
 pub const CSIZE: u8 = 4u8;
@@ -287,12 +303,12 @@ impl Default for HLC {
 
 /// A physical clock relying on std::time::SystemTime::now().
 ///
-/// It returns a NTP64 relative to std::time::UNIX_EPOCH (1st Jan 1970).  
+/// It returns a NTP64 relative to [`EPOCH`].  
 /// That's the default clock used by an [`HLC`] if [`HLCBuilder::with_clock()`] is not called.
 ///
 #[inline]
 pub fn system_time_clock() -> NTP64 {
-    NTP64::from(SystemTime::now().duration_since(UNIX_EPOCH).unwrap())
+    NTP64::from(SystemTime::now().duration_since(*EPOCH).unwrap())
 }
 
 #[cfg(test)]

@@ -86,7 +86,6 @@ pub struct ParseTimestampError {
 mod tests {
     use crate::*;
     use std::convert::TryFrom;
-    use std::time::UNIX_EPOCH;
 
     #[test]
     fn test_timestamp() {
@@ -94,11 +93,11 @@ mod tests {
         let id2: ID = ID::try_from(vec![0x02].as_ref()).unwrap();
 
         let ts1_epoch = Timestamp::new(Default::default(), id1.clone());
-        assert_eq!(ts1_epoch.get_time().to_system_time(), UNIX_EPOCH);
+        assert_eq!(ts1_epoch.get_time().to_system_time(), *crate::EPOCH);
         assert_eq!(ts1_epoch.get_id(), &id1);
 
         let ts2_epoch = Timestamp::new(Default::default(), id2.clone());
-        assert_eq!(ts2_epoch.get_time().to_system_time(), UNIX_EPOCH);
+        assert_eq!(ts2_epoch.get_time().to_system_time(), *crate::EPOCH);
         assert_eq!(ts2_epoch.get_id(), &id2);
 
         // Test that 2 Timestamps with same time but different ids are different and ordered
@@ -106,6 +105,7 @@ mod tests {
         assert!(ts1_epoch < ts2_epoch);
 
         let now = system_time_clock();
+        println!("NOW: {:?} => {}", now, now);
         let ts1_now = Timestamp::new(now, id1);
         let ts2_now = Timestamp::new(now, id2);
         assert_ne!(ts1_now, ts2_now);
