@@ -90,14 +90,14 @@ mod tests {
 
     #[test]
     fn test_timestamp() {
-        let id1: ID = ID::try_from(vec![0x01].as_ref()).unwrap();
-        let id2: ID = ID::try_from(vec![0x02].as_ref()).unwrap();
+        let id1: ID = ID::try_from([0x01]).unwrap();
+        let id2: ID = ID::try_from([0x02]).unwrap();
 
-        let ts1_epoch = Timestamp::new(Default::default(), id1.clone());
+        let ts1_epoch = Timestamp::new(Default::default(), id1);
         assert_eq!(ts1_epoch.get_time().to_system_time(), UNIX_EPOCH);
         assert_eq!(ts1_epoch.get_id(), &id1);
 
-        let ts2_epoch = Timestamp::new(Default::default(), id2.clone());
+        let ts2_epoch = Timestamp::new(Default::default(), id2);
         assert_eq!(ts2_epoch.get_time().to_system_time(), UNIX_EPOCH);
         assert_eq!(ts2_epoch.get_id(), &id2);
 
