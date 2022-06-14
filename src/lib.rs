@@ -97,15 +97,14 @@ lazy_static! {
 /// # Examples
 ///
 /// ```
-/// use std::convert::TryFrom;
-/// use std::time::Duration;
+/// use std::{convert::TryFrom, time::Duration};
 /// use uhlc::{HLCBuilder, ID};
 ///
 /// let default_hlc = HLCBuilder::new().build();
 /// println!("{}", default_hlc.new_timestamp());
 ///
 /// let custom_hlc = HLCBuilder::new()
-///    .with_id(ID::try_from(vec![0x01, 0x02, 0x03].as_ref()).unwrap())
+///    .with_id(ID::try_from([0x01, 0x02, 0x03]).unwrap())
 ///    .with_max_delta(Duration::from_secs(1))
 ///    .build();
 /// println!("{}", custom_hlc.new_timestamp());
@@ -319,14 +318,14 @@ mod tests {
     #[test]
     fn hlc_parallel() {
         task::block_on(async {
-            let id0: ID = ID::try_from(vec![0x00].as_ref()).unwrap();
-            let id1: ID = ID::try_from(vec![0x01].as_ref()).unwrap();
-            let id2: ID = ID::try_from(vec![0x02].as_ref()).unwrap();
-            let id3: ID = ID::try_from(vec![0x03].as_ref()).unwrap();
-            let hlc0 = Arc::new(HLCBuilder::new().with_id(id0.clone()).build());
-            let hlc1 = Arc::new(HLCBuilder::new().with_id(id1.clone()).build());
-            let hlc2 = Arc::new(HLCBuilder::new().with_id(id2.clone()).build());
-            let hlc3 = Arc::new(HLCBuilder::new().with_id(id3.clone()).build());
+            let id0: ID = ID::try_from([0x01]).unwrap();
+            let id1: ID = ID::try_from([0x02]).unwrap();
+            let id2: ID = ID::try_from([0x03]).unwrap();
+            let id3: ID = ID::try_from([0x04]).unwrap();
+            let hlc0 = Arc::new(HLCBuilder::new().with_id(id0).build());
+            let hlc1 = Arc::new(HLCBuilder::new().with_id(id1).build());
+            let hlc2 = Arc::new(HLCBuilder::new().with_id(id2).build());
+            let hlc3 = Arc::new(HLCBuilder::new().with_id(id3).build());
 
             // Make 4 tasks to generate 10000 timestamps each with distinct HLCs,
             // and also to update each other HLCs
@@ -409,10 +408,10 @@ mod tests {
     #[test]
     fn hlc_update_with_timestamp() {
         let id: ID = ID::from(uuid::Uuid::new_v4());
-        let hlc = HLCBuilder::new().with_id(id.clone()).build();
+        let hlc = HLCBuilder::new().with_id(id).build();
 
         // Test that updating with an old Timestamp don't break the HLC
-        let past_ts = Timestamp::new(Default::default(), id.clone());
+        let past_ts = Timestamp::new(Default::default(), id);
         let now_ts = hlc.new_timestamp();
         assert!(hlc.update_with_timestamp(&past_ts).is_ok());
         assert!(hlc.new_timestamp() > now_ts);
@@ -420,7 +419,15 @@ mod tests {
         // Test that updating with a Timestamp exceeding the delta is refused
         let now_ts = hlc.new_timestamp();
         let future_time = now_ts.get_time() + NTP64::from(Duration::from_millis(1000));
-        let future_ts = Timestamp::new(future_time, id.clone());
+        let future_ts = Timestamp::new(future_time, id);
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
+    }
+
+    #[test]
+    fn stack_sizes() {
+        assert_eq!(std::mem::size_of::<ID>(), 16);
+        assert_eq!(std::mem::size_of::<Option<ID>>(), 16);
+        assert_eq!(std::mem::size_of::<Timestamp>(), 24);
+        assert_eq!(std::mem::size_of::<Option<Timestamp>>(), 24);
     }
 }

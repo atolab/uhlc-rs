@@ -10,24 +10,26 @@
 //
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::num::NonZeroU128;
 use std::str::FromStr;
 use uuid::Uuid;
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
-/// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `usize`),
+/// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `NonZeroU8`),
 /// allowing allocations on the stack for better performances.
 ///
 /// # Examples
 ///
 /// ```
+/// use std::convert::TryFrom;
 /// use uhlc::ID;
 ///
 /// let buf = [0x1a, 0x2b, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00,
 ///            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-/// let id = ID::new(3, buf);
+/// let id = ID::try_from(&buf[..3]).unwrap();
 /// assert_eq!(id.size(), 3);
 /// assert_eq!(id.as_slice(), &[0x1a, 0x2b, 0x3c]);
 /// assert_eq!(id.to_string(), "1A2B3C".to_string());
@@ -40,66 +42,117 @@ use uuid::Uuid;
 /// let id = ID::from(Uuid::new_v4());
 /// assert_eq!(id.size(), 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize)]
-pub struct ID {
-    size: usize,
-    id: [u8; ID::MAX_SIZE],
-}
+#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq)]
+pub struct ID(NonZeroU128);
 
 impl ID {
     /// The maximum size of an ID in bytes: 16.
     pub const MAX_SIZE: usize = 16;
 
-    /// Create a new ID with the "`size`" first bytes of "`id`"
-    pub fn new(size: usize, id: [u8; ID::MAX_SIZE]) -> ID {
-        ID { size, id }
-    }
-
     /// The size of this ID in bytes
     #[inline]
     pub fn size(&self) -> usize {
-        self.size
+        // Safety: here, we're voluntarily bypassing the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        16 - (if cfg!(target_endian = "little") {
+            self.0.leading_zeros()
+        } else {
+            self.0.trailing_zeros()
+        } / 8) as usize
     }
 
     /// This ID as a slice
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
-        &self.id[..self.size]
+        // Safety: here, we're voluntarily ignoring the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        let slice = unsafe { std::mem::transmute::<&NonZeroU128, &[u8; 16]>(&self.0) };
+        &slice[..self.size()]
     }
 }
 
 impl From<Uuid> for ID {
     #[inline]
     fn from(uuid: Uuid) -> Self {
-        ID {
-            size: 16,
-            id: *uuid.as_bytes(),
-        }
+        uuid.as_bytes()
+            .try_into()
+            .expect("Uuids should always be non-null")
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct SizeError(usize);
+impl std::fmt::Display for SizeError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Maximum ID size ({} bytes) exceeded: {}",
+            ID::MAX_SIZE,
+            self.0
+        )
+    }
+}
+impl std::error::Error for SizeError {}
+
+macro_rules! impl_from_sized_slice_for_id {
+    ($N: expr) => {
+        impl TryFrom<&[u8; $N]> for ID {
+            type Error = SizeError;
+            fn try_from(value: &[u8; $N]) -> Result<Self, Self::Error> {
+                let mut id = 0u128;
+                // Safety: all operations on the u128s constructed from slices treat them as little-endian.
+                // Always constructing as little endian from a slice makes for less surprising behaviours when
+                // inspecting on wire.
+                unsafe {
+                    std::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..$N]
+                        .copy_from_slice(value);
+                }
+                match NonZeroU128::new(id) {
+                    Some(id) => Ok(Self(id)),
+                    None => Err(SizeError(0)),
+                }
+            }
+        }
+        impl TryFrom<[u8; $N]> for ID {
+            type Error = SizeError;
+            fn try_from(id: [u8; $N]) -> Result<Self, Self::Error> {
+                (&id).try_into()
+            }
+        }
+    };
+}
+impl_from_sized_slice_for_id!(1);
+impl_from_sized_slice_for_id!(2);
+impl_from_sized_slice_for_id!(3);
+impl_from_sized_slice_for_id!(4);
+impl_from_sized_slice_for_id!(5);
+impl_from_sized_slice_for_id!(6);
+impl_from_sized_slice_for_id!(7);
+impl_from_sized_slice_for_id!(8);
+impl_from_sized_slice_for_id!(9);
+impl_from_sized_slice_for_id!(10);
+impl_from_sized_slice_for_id!(11);
+impl_from_sized_slice_for_id!(12);
+impl_from_sized_slice_for_id!(13);
+impl_from_sized_slice_for_id!(14);
+impl_from_sized_slice_for_id!(15);
+impl_from_sized_slice_for_id!(16);
 
 impl TryFrom<&[u8]> for ID {
-    type Error = String;
+    type Error = SizeError;
     fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
         let size = slice.len();
-        if size > ID::MAX_SIZE {
-            Err(format!(
-                "Maximum ID size ({} bytes) exceeded: {}",
-                ID::MAX_SIZE,
-                size
-            ))
-        } else {
-            let mut id = [0u8; ID::MAX_SIZE];
-            id[..size].copy_from_slice(slice);
-            Ok(ID::new(size, id))
+        if size > Self::MAX_SIZE {
+            return Err(SizeError(size));
         }
-    }
-}
-
-impl PartialEq for ID {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.size == other.size && self.as_slice() == other.as_slice()
+        let mut id = 0u128;
+        unsafe {
+            std::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..size].copy_from_slice(slice);
+            match NonZeroU128::new(id) {
+                Some(id) => Ok(Self(id)),
+                None => Err(SizeError(0)),
+            }
+        }
     }
 }
 
@@ -113,10 +166,17 @@ impl PartialOrd for ID {
 impl Ord for ID {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
-        self.as_slice().cmp(other.as_slice())
+        // Safety: here, we're voluntarily bypassing the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        if cfg!(target_endian = "little") {
+            self.0.cmp(&other.0)
+        } else {
+            u128::from_le(self.0.get()).cmp(&u128::from_le(other.0.get()))
+        }
     }
 }
 
+#[allow(clippy::derive_hash_xor_eq)]
 impl Hash for ID {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -144,7 +204,11 @@ impl FromStr for ID {
             .map_err(|e| ParseIDError {
                 cause: e.to_string(),
             })
-            .and_then(|bytes| ID::try_from(bytes.as_slice()).map_err(|e| ParseIDError { cause: e }))
+            .and_then(|bytes| {
+                ID::try_from(bytes.as_slice()).map_err(|e| ParseIDError {
+                    cause: e.to_string(),
+                })
+            })
     }
 }
 
