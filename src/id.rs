@@ -13,7 +13,7 @@ use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::num::NonZeroU8;
+use std::num::NonZeroU128;
 use std::str::FromStr;
 use uuid::Uuid;
 
@@ -42,11 +42,8 @@ use uuid::Uuid;
 /// let id = ID::from(Uuid::new_v4());
 /// assert_eq!(id.size(), 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize)]
-pub struct ID {
-    size: NonZeroU8,
-    id: [u8; ID::MAX_SIZE],
-}
+#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq)]
+pub struct ID(NonZeroU128);
 
 impl ID {
     /// The maximum size of an ID in bytes: 16.
@@ -55,20 +52,31 @@ impl ID {
     /// The size of this ID in bytes
     #[inline]
     pub fn size(&self) -> usize {
-        self.size.get() as _
+        // Safety: here, we're voluntarily bypassing the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        16 - (if cfg!(target_endian = "little") {
+            self.0.leading_zeros()
+        } else {
+            self.0.trailing_zeros()
+        } / 8) as usize
     }
 
     /// This ID as a slice
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
-        &self.id[..self.size()]
+        // Safety: here, we're voluntarily ignoring the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        let slice = unsafe { std::mem::transmute::<&NonZeroU128, &[u8; 16]>(&self.0) };
+        &slice[..self.size()]
     }
 }
 
 impl From<Uuid> for ID {
     #[inline]
     fn from(uuid: Uuid) -> Self {
-        uuid.as_bytes().try_into().unwrap()
+        uuid.as_bytes()
+            .try_into()
+            .expect("Uuids should always be non-null")
     }
 }
 
@@ -85,36 +93,27 @@ impl std::fmt::Display for SizeError {
     }
 }
 impl std::error::Error for SizeError {}
-impl From<[u8; 16]> for ID {
-    fn from(id: [u8; 16]) -> Self {
-        Self {
-            size: unsafe { NonZeroU8::new_unchecked(16) },
-            id,
-        }
-    }
-}
-impl From<&[u8; 16]> for ID {
-    fn from(id: &[u8; 16]) -> Self {
-        (*id).into()
-    }
-}
+
 macro_rules! impl_from_sized_slice_for_id {
     ($N: expr) => {
-        impl From<&[u8; $N]> for ID {
-            fn from(value: &[u8; $N]) -> Self {
-                let mut id = std::mem::MaybeUninit::<[u8; 16]>::uninit();
+        impl TryFrom<&[u8; $N]> for ID {
+            type Error = SizeError;
+            fn try_from(value: &[u8; $N]) -> Result<Self, Self::Error> {
+                let mut id = 0u128;
                 unsafe {
-                    id.assume_init_mut()[..$N].copy_from_slice(value);
-                    Self {
-                        size: NonZeroU8::new_unchecked($N),
-                        id: id.assume_init(),
+                    std::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..$N]
+                        .copy_from_slice(value);
+                    match NonZeroU128::new(id) {
+                        Some(id) => Ok(Self(id)),
+                        None => Err(SizeError(0)),
                     }
                 }
             }
         }
-        impl From<[u8; $N]> for ID {
-            fn from(id: [u8; $N]) -> Self {
-                (&id).into()
+        impl TryFrom<[u8; $N]> for ID {
+            type Error = SizeError;
+            fn try_from(id: [u8; $N]) -> Result<Self, Self::Error> {
+                (&id).try_into()
             }
         }
     };
@@ -134,6 +133,7 @@ impl_from_sized_slice_for_id!(12);
 impl_from_sized_slice_for_id!(13);
 impl_from_sized_slice_for_id!(14);
 impl_from_sized_slice_for_id!(15);
+impl_from_sized_slice_for_id!(16);
 
 impl TryFrom<&[u8]> for ID {
     type Error = SizeError;
@@ -142,21 +142,14 @@ impl TryFrom<&[u8]> for ID {
         if size > Self::MAX_SIZE {
             return Err(SizeError(size));
         }
-        match NonZeroU8::new(size as u8) {
-            Some(nz_size) => {
-                let mut id = [0; 16];
-                id[..size].copy_from_slice(slice);
-                Ok(Self { size: nz_size, id })
+        let mut id = 0u128;
+        unsafe {
+            std::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..size].copy_from_slice(slice);
+            match NonZeroU128::new(id) {
+                Some(id) => Ok(Self(id)),
+                None => Err(SizeError(0)),
             }
-            None => Err(SizeError(size)),
         }
-    }
-}
-
-impl PartialEq for ID {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.size == other.size && self.as_slice() == other.as_slice()
     }
 }
 
@@ -170,10 +163,17 @@ impl PartialOrd for ID {
 impl Ord for ID {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
-        self.as_slice().cmp(other.as_slice())
+        // Safety: here, we're voluntarily bypassing the platform's endianness.
+        // All constructors MUST ensure the value is actually LE encoded.
+        if cfg!(target_endian = "little") {
+            self.0.cmp(&other.0)
+        } else {
+            u128::from_le(self.0.get()).cmp(&u128::from_le(other.0.get()))
+        }
     }
 }
 
+#[allow(clippy::derive_hash_xor_eq)]
 impl Hash for ID {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {

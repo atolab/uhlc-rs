@@ -97,14 +97,14 @@ lazy_static! {
 /// # Examples
 ///
 /// ```
-/// use std::time::Duration;
+/// use std::{convert::TryFrom, time::Duration};
 /// use uhlc::{HLCBuilder, ID};
 ///
 /// let default_hlc = HLCBuilder::new().build();
 /// println!("{}", default_hlc.new_timestamp());
 ///
 /// let custom_hlc = HLCBuilder::new()
-///    .with_id(ID::from([0x01, 0x02, 0x03]))
+///    .with_id(ID::try_from([0x01, 0x02, 0x03]).unwrap())
 ///    .with_max_delta(Duration::from_secs(1))
 ///    .build();
 /// println!("{}", custom_hlc.new_timestamp());
@@ -318,10 +318,10 @@ mod tests {
     #[test]
     fn hlc_parallel() {
         task::block_on(async {
-            let id0: ID = ID::try_from([0x00]).unwrap();
-            let id1: ID = ID::try_from([0x01]).unwrap();
-            let id2: ID = ID::try_from([0x02]).unwrap();
-            let id3: ID = ID::try_from([0x03]).unwrap();
+            let id0: ID = ID::try_from([0x01]).unwrap();
+            let id1: ID = ID::try_from([0x02]).unwrap();
+            let id2: ID = ID::try_from([0x03]).unwrap();
+            let id3: ID = ID::try_from([0x04]).unwrap();
             let hlc0 = Arc::new(HLCBuilder::new().with_id(id0).build());
             let hlc1 = Arc::new(HLCBuilder::new().with_id(id1).build());
             let hlc2 = Arc::new(HLCBuilder::new().with_id(id2).build());
