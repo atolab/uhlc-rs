@@ -100,13 +100,16 @@ macro_rules! impl_from_sized_slice_for_id {
             type Error = SizeError;
             fn try_from(value: &[u8; $N]) -> Result<Self, Self::Error> {
                 let mut id = 0u128;
+                // Safety: all operations on the u128s constructed from slices treat them as little-endian.
+                // Always constructing as little endian from a slice makes for less surprising behaviours when
+                // inspecting on wire.
                 unsafe {
                     std::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..$N]
                         .copy_from_slice(value);
-                    match NonZeroU128::new(id) {
-                        Some(id) => Ok(Self(id)),
-                        None => Err(SizeError(0)),
-                    }
+                }
+                match NonZeroU128::new(id) {
+                    Some(id) => Ok(Self(id)),
+                    None => Err(SizeError(0)),
                 }
             }
         }
