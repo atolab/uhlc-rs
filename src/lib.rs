@@ -422,4 +422,12 @@ mod tests {
         let future_ts = Timestamp::new(future_time, id);
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
+
+    #[test]
+    fn stack_sizes() {
+        assert_eq!(std::mem::size_of::<ID>(), 16);
+        assert_eq!(std::mem::size_of::<Option<ID>>(), 16);
+        assert_eq!(std::mem::size_of::<Timestamp>(), 24);
+        assert_eq!(std::mem::size_of::<Option<Timestamp>>(), 24);
+    }
 }
