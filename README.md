@@ -13,7 +13,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uhlc = "0.4"
+uhlc = "0.5"
 ```
 
 Then in your code:
@@ -72,9 +72,9 @@ The `uhlc::HLC::default()` operation generate an UUIDv4 as identifier and uses
 But using the `uhlc::HLCBuilder` allows you to configure the `HLC` differently. Example:  
 ```Rust
 let custom_hlc = HLCBuilder::new()
-    .with_id(ID::try_from(vec![0x01, 0x02, 0x03].as_ref()).unwrap())  // use a custom identifier
-    .with_clock(my_custom_gps_clock)                                  // use a custom physical clock (e.g. using GPS as time source)
-    .with_max_delta(Duration::from_secs(1))                           // use a custom maximum delta (see explanations below)
+    .with_id(ID::try_from([0x01, 0x02, 0x03]).unwrap())     // use a custom identifier
+    .with_clock(my_custom_gps_clock)                        // use a custom physical clock (e.g. using GPS as time source)
+    .with_max_delta(Duration::from_secs(1))                 // use a custom maximum delta (see explanations below)
     .build();
 
 ```
