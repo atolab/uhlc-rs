@@ -24,13 +24,23 @@ categories = ["date-and-time"]
 authors = ["Julien Enoch <julien.enoch@adlinktech.com>"]
 edition = "2018"
 
+[features]
+default = ["std"]
+std = ["uuid/std", "hex/std", "humantime", "log/std", "lazy_static", "serde/std"]
+nightly = ["error_in_core"] # Enables experimental features -- requires nightly rust toolchain
+error_in_core = [] # Allows to use core::error::Error
+
 [dependencies]
-uuid = { version = "1.1", features = ["v4"] }
-hex = "0.4"
-humantime = "2.0"
-log = "0.4"
-lazy_static = "1.4.0"
-serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.1", default-features = false, features = ["v4"] }
+    # NOTE: Generation of UUIDv4 on embedded devices requires a custom implementation
+    #       for getrandom::getrandom. Refer to the following page for more information:
+    #       https://docs.rs/getrandom/latest/getrandom/#unsupported-targets
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+humantime = { version = "2.0", optional = true }
+log = { version = "0.4", default-features = false }
+lazy_static = { version = "1.4.0", optional = true }
+serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
+spin = { version = "0.9", default-features = false, features = ["mutex", "use_ticket_mutex"] } # No_std alternative for std::sync::Mutex
 
 [dev-dependencies]
 futures = "0.3"
