@@ -8,16 +8,16 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use serde::{Deserialize, Serialize};
+use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::time::Duration;
-use core::fmt;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
 use {
+    core::str::FromStr,
     humantime::{format_rfc3339_nanos, parse_rfc3339},
     std::time::{SystemTime, UNIX_EPOCH},
-    core::str::FromStr,
 };
 
 #[cfg(not(feature = "std"))]

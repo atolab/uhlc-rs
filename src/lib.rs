@@ -50,16 +50,18 @@
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
-
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-#![cfg_attr(all(not(feature = "std"), feature = "error_in_core"), feature(error_in_core))] // core::error::Error is not needed if using std
+#![cfg_attr(
+    all(not(feature = "std"), feature = "error_in_core"),
+    feature(error_in_core)
+)] // core::error::Error is not needed if using std
 
 #[cfg(not(feature = "std"))]
 extern crate alloc;
 
-use log::warn;
 use core::cmp;
 use core::time::Duration;
+use log::warn;
 
 #[cfg(feature = "std")]
 use {
@@ -217,7 +219,9 @@ macro_rules! lock {
 
 #[cfg(not(feature = "std"))]
 macro_rules! lock {
-    ($var:expr) => { $var.lock() }
+    ($var:expr) => {
+        $var.lock()
+    };
 }
 
 impl HLC {
@@ -354,9 +358,9 @@ mod tests {
     use crate::*;
     use async_std::sync::Arc;
     use async_std::task;
-    use futures::join;
     use core::convert::TryFrom;
     use core::time::Duration;
+    use futures::join;
 
     fn is_sorted(vec: &[Timestamp]) -> bool {
         let mut it = vec.iter();

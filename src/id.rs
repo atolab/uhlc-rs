@@ -8,13 +8,13 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use serde::{Deserialize, Serialize};
 use core::cmp::Ordering;
 use core::convert::{TryFrom, TryInto};
 use core::fmt;
 use core::hash::{Hash, Hasher};
 use core::num::NonZeroU128;
 use core::str::FromStr;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[cfg(not(feature = "std"))]
@@ -154,7 +154,8 @@ impl TryFrom<&[u8]> for ID {
         }
         let mut id = 0u128;
         unsafe {
-            core::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..size].copy_from_slice(slice);
+            core::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..size]
+                .copy_from_slice(slice);
             match NonZeroU128::new(id) {
                 Some(id) => Ok(Self(id)),
                 None => Err(SizeError(0)),

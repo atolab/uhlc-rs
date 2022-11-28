@@ -9,8 +9,8 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use super::{ID, NTP64};
-use serde::{Deserialize, Serialize};
 use core::{fmt, time::Duration};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
 use core::str::FromStr;
