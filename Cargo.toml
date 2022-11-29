@@ -40,7 +40,7 @@ humantime = { version = "2.0", optional = true }
 log = { version = "0.4", default-features = false }
 lazy_static = { version = "1.4.0", optional = true }
 serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
-spin = { version = "0.9", default-features = false, features = ["mutex", "use_ticket_mutex"] } # No_std alternative for std::sync::Mutex
+spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] } # No_std alternative for std::sync::Mutex
 
 [dev-dependencies]
 futures = "0.3"
