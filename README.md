@@ -35,7 +35,7 @@ if ! hlc.update_with_timestamp(&other_ts).is_ok() {
 
 ## What is an HLC ?
 A Hybrid Logical Clock combines a Physical Clock with a Logical Clock.
-It generates monotonic timestamps that are close to the pysical time, but with a
+It generates monotonic timestamps that are close to the physical time, but with a
 counter part in the last bits that allow to preserve the _"happen before"_ relationship.
 
 You can find more detailled explanations in:
@@ -93,6 +93,48 @@ incoming timestamp exceeds the current physical time more than a delta
 (500ms by default, configurable declaring the `UHLC_MAX_DELTA_MS` environment variable).
 In such case, it could be wise to refuse or drop the incoming event,
 since it might not be correctly ordered with further events.
+
+## Cargo features
+This crate provides the following Cargo features:
+
+ * `std`: allows this crate to use the full `std`. Even if disabled, notice that the
+   `alloc` crate is still required;
+
+ * `nightly`: allows to enable all the experimental features at once;
+
+ * `error_in_core`: experimental feature (requires Rust nightly toolchain) that enables
+   the usage of the trait `core::error::Error` instead of `std::error::Error`. Does nothing
+   if `std` is also enabled.
+
+Only the `std` feature is enabled by default.
+
+## Usage in `no_std` environments
+In order to use this crate in a `no_std` environment, the `default-features = false` flag
+should be added in the dependencies section of the `Cargo.toml` file. The main differences
+with respect to the `std` implementation include:
+
+ * environment variables do not exist in an embedded environment, hence `UHLC_MAX_DELTA_MS`
+   cannot be used to tweak at runtime the delta for the clock "anti-drift" mechanism. An
+   appropriate value must always be set at compile time;
+
+ * usually, embedded systems do not keep track of "real world" time, but re-initialize their
+   hardware timers every time they boot. Hence, the physical clock that is used when calling
+   `uhlc::HLC::default()` is a dummy function that always return a zero-valued timestamp.
+   Since the HLC is responsible for ensuring that timestamps are strictly increasing in order
+   to preserve the _"happen before"_ relationship, this means calls to
+   `uhlc::HLC::new_timestamp()` return incremental integers;
+
+ * for the same reason, parsing from and formatting to human-readable time formats is not
+   available in `no_std`;
+
+ * the `std::sync::Mutex` (internally used to guarantee timestamps monotonicity) is replaced
+   by `spin::Mutex`, which is based on spinlocks instead of relying on some operating system
+   functionality;
+
+ * since `core::error::Error` is still an experimental feature in Rust, `SizeError`
+   can implement the `Error` trait only if the feature `error_in_core` is enabled;
+
+ * tests (with `cargo test`) can be run only on `std` targets.
 
 ## Usages
 **uhlc** is currently used in [Eclipse zenoh](https://github.com/eclipse-zenoh/zenoh).
