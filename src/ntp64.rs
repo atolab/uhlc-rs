@@ -8,12 +8,20 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use humantime::{format_rfc3339_nanos, parse_rfc3339};
+use core::fmt;
+use core::ops::{Add, AddAssign, Sub, SubAssign};
+use core::time::Duration;
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, AddAssign, Sub};
-use std::str::FromStr;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use std::{fmt, ops::SubAssign};
+
+#[cfg(feature = "std")]
+use {
+    core::str::FromStr,
+    humantime::{format_rfc3339_nanos, parse_rfc3339},
+    std::time::{SystemTime, UNIX_EPOCH},
+};
+
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
 
 // maximal number of seconds that can be represented in the 32-bits part
 const MAX_NB_SEC: u64 = (1u64 << 32) - 1;
@@ -67,6 +75,7 @@ impl NTP64 {
 
     /// Convert to a [`SystemTime`] (making the assumption that this NTP64 is relative to [`UNIX_EPOCH`]).
     #[inline]
+    #[cfg(feature = "std")]
     pub fn to_system_time(self) -> SystemTime {
         UNIX_EPOCH + self.to_duration()
     }
@@ -178,7 +187,10 @@ impl SubAssign<u64> for NTP64 {
 
 impl fmt::Display for NTP64 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", format_rfc3339_nanos(self.to_system_time()))
+        #[cfg(feature = "std")]
+        return write!(f, "{}", format_rfc3339_nanos(self.to_system_time()));
+        #[cfg(not(feature = "std"))]
+        return write!(f, "{:x}", self.0);
     }
 }
 
@@ -197,6 +209,7 @@ impl From<Duration> for NTP64 {
     }
 }
 
+#[cfg(feature = "std")]
 impl FromStr for NTP64 {
     type Err = ParseNTP64Error;
 

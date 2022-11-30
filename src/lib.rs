@@ -50,13 +50,32 @@
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
+#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
+#![cfg_attr(
+    all(not(feature = "std"), feature = "error_in_core"),
+    feature(error_in_core)
+)] // core::error::Error is not needed if using std
 
-use lazy_static::lazy_static;
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+use core::cmp;
+use core::time::Duration;
 use log::warn;
-use std::cmp;
-use std::env::var;
-use std::sync::Mutex;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+#[cfg(feature = "std")]
+use {
+    lazy_static::lazy_static,
+    std::env::var,
+    std::sync::Mutex,
+    std::time::{SystemTime, UNIX_EPOCH},
+};
+
+#[cfg(not(feature = "std"))]
+use {
+    alloc::{format, string::String},
+    spin::Mutex, // No_std-friendly alternative to std::sync::Mutex
+};
 
 mod id;
 pub use id::*;
@@ -77,6 +96,7 @@ const LMASK: u64 = !CMASK;
 // HLC Delta in milliseconds: maximum accepted drift for an external timestamp.
 // I.e.: if an incoming timestamp has a time > now() + delta, then the HLC is not updated.
 const DEFAULT_DELTA_MS: u64 = 500;
+#[cfg(feature = "std")]
 lazy_static! {
     static ref DELTA_MS: u64 = match var("UHLC_MAX_DELTA_MS") {
         Ok(s) => s.parse().unwrap_or_else(|e| panic!(
@@ -90,6 +110,8 @@ lazy_static! {
         ),
     };
 }
+#[cfg(not(feature = "std"))]
+static DELTA_MS: &u64 = &DEFAULT_DELTA_MS; // Environment variables do not make sense in no_std environment
 
 ///
 /// The builder of [`HLC`].
@@ -166,7 +188,10 @@ impl Default for HLCBuilder {
         HLCBuilder {
             hlc: HLC {
                 id: uuid::Uuid::new_v4().into(),
+                #[cfg(feature = "std")]
                 clock: system_time_clock,
+                #[cfg(not(feature = "std"))]
+                clock: zero_clock,
                 delta: NTP64::from(Duration::from_millis(*DELTA_MS)),
                 last_time: Default::default(),
             },
@@ -182,12 +207,20 @@ pub struct HLC {
     last_time: Mutex<NTP64>,
 }
 
+#[cfg(feature = "std")]
 macro_rules! lock {
     ($var:expr) => {
         match $var.try_lock() {
             Ok(guard) => guard,
             Err(_) => $var.lock().unwrap(),
         }
+    };
+}
+
+#[cfg(not(feature = "std"))]
+macro_rules! lock {
+    ($var:expr) => {
+        $var.lock()
     };
 }
 
@@ -306,8 +339,18 @@ impl Default for HLC {
 /// That's the default clock used by an [`HLC`] if [`HLCBuilder::with_clock()`] is not called.
 ///
 #[inline]
+#[cfg(feature = "std")]
 pub fn system_time_clock() -> NTP64 {
     NTP64::from(SystemTime::now().duration_since(UNIX_EPOCH).unwrap())
+}
+
+/// A dummy clock that returns a NTP64 initialized with the value 0.
+/// Suitable to use in no_std environments where std::time::{SystemTime, UNIX_EPOCH} are not available.
+/// If the feature `std` is disabled, that's the default clock used by an [`HLC`] if [`HLCBuilder::with_clock()`] is not called.
+/// Notice that this means that the [`HLC`] will use incremental timestamps starting from 0.
+#[inline]
+pub fn zero_clock() -> NTP64 {
+    NTP64(0)
 }
 
 #[cfg(test)]
@@ -315,9 +358,9 @@ mod tests {
     use crate::*;
     use async_std::sync::Arc;
     use async_std::task;
+    use core::convert::TryFrom;
+    use core::time::Duration;
     use futures::join;
-    use std::convert::TryFrom;
-    use std::time::Duration;
 
     fn is_sorted(vec: &[Timestamp]) -> bool {
         let mut it = vec.iter();
@@ -441,9 +484,9 @@ mod tests {
 
     #[test]
     fn stack_sizes() {
-        assert_eq!(std::mem::size_of::<ID>(), 16);
-        assert_eq!(std::mem::size_of::<Option<ID>>(), 16);
-        assert_eq!(std::mem::size_of::<Timestamp>(), 24);
-        assert_eq!(std::mem::size_of::<Option<Timestamp>>(), 24);
+        assert_eq!(core::mem::size_of::<ID>(), 16);
+        assert_eq!(core::mem::size_of::<Option<ID>>(), 16);
+        assert_eq!(core::mem::size_of::<Timestamp>(), 24);
+        assert_eq!(core::mem::size_of::<Option<Timestamp>>(), 24);
     }
 }
