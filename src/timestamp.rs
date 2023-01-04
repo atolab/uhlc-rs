@@ -143,7 +143,7 @@ mod tests {
 
         #[cfg(feature = "std")]
         {
-            // We do not case about parsing human-readable timestamps in no_std
+            // We do not care about parsing human-readable timestamps in no_std
             let s = ts1_now.to_string();
             assert_eq!(ts1_now, s.parse().unwrap());
         }
