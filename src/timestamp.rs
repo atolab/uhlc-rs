@@ -110,11 +110,15 @@ mod tests {
         let ts1_epoch = Timestamp::new(Default::default(), id1);
         #[cfg(feature = "std")]
         assert_eq!(ts1_epoch.get_time().to_system_time(), std::time::UNIX_EPOCH);
+        #[cfg(not(feature = "std"))]
+        assert_eq!(ts1_epoch.get_time().as_u64(), 0);
         assert_eq!(ts1_epoch.get_id(), &id1);
 
         let ts2_epoch = Timestamp::new(Default::default(), id2);
         #[cfg(feature = "std")]
         assert_eq!(ts2_epoch.get_time().to_system_time(), std::time::UNIX_EPOCH);
+        #[cfg(not(feature = "std"))]
+        assert_eq!(ts2_epoch.get_time().as_u64(), 0);
         assert_eq!(ts2_epoch.get_id(), &id2);
 
         // Test that 2 Timestamps with same time but different ids are different and ordered
@@ -122,20 +126,29 @@ mod tests {
         assert!(ts1_epoch < ts2_epoch);
 
         #[cfg(feature = "std")]
+        let now = system_time_clock();
+        #[cfg(not(feature = "std"))]
+        let now = zero_clock();
+        let ts1_now = Timestamp::new(now, id1);
+        let ts2_now = Timestamp::new(now, id2);
+        assert_ne!(ts1_now, ts2_now);
+        assert!(ts1_now < ts2_now);
+
+        #[cfg(feature = "std")]
         {
-            let now = system_time_clock();
-            let ts1_now = Timestamp::new(now, id1);
-            let ts2_now = Timestamp::new(now, id2);
-            assert_ne!(ts1_now, ts2_now);
-            assert!(ts1_now < ts2_now);
+            // These are not necessarily true in no_std since we use a new zero-based (incremental) clock
             assert!(ts1_epoch < ts1_now);
             assert!(ts2_epoch < ts2_now);
+        }
 
+        #[cfg(feature = "std")]
+        {
+            // We do not case about parsing human-readable timestamps in no_std
             let s = ts1_now.to_string();
             assert_eq!(ts1_now, s.parse().unwrap());
-
-            let diff = ts1_now.get_diff_duration(&ts2_now);
-            assert_eq!(diff, Duration::from_secs(0));
         }
+
+        let diff = ts1_now.get_diff_duration(&ts2_now);
+        assert_eq!(diff, Duration::from_secs(0));
     }
 }
