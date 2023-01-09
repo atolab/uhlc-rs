@@ -100,6 +100,9 @@ This crate provides the following Cargo features:
  * `std`: allows this crate to use the full `std`. Even if disabled, notice that the
    `alloc` crate is still required;
 
+ * `defmt`: allows the relevant data structures to implement the `defmt::Format` trait,
+   used instead of `std::fmt::{Debug, Display}` for logging in `no_std` environments;
+
  * `nightly`: allows to enable all the experimental features at once;
 
  * `error_in_core`: experimental feature (requires Rust nightly toolchain) that enables

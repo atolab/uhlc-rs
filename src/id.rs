@@ -95,6 +95,17 @@ impl fmt::Display for SizeError {
         )
     }
 }
+#[cfg(feature = "defmt")]
+impl defmt::Format for SizeError {
+    fn format(&self, f: defmt::Formatter) {
+        defmt::write!(
+            f,
+            "Maximum ID size ({} bytes) exceeded: {}",
+            ID::MAX_SIZE,
+            self.0
+        );
+    }
+}
 
 #[cfg(feature = "std")]
 impl std::error::Error for SizeError {}
@@ -204,6 +215,13 @@ impl fmt::Display for ID {
     }
 }
 
+#[cfg(feature = "defmt")]
+impl defmt::Format for ID {
+    fn format(&self, f: defmt::Formatter) {
+        defmt::write!(f, "{}", hex::encode_upper(self.as_slice()));
+    }
+}
+
 impl FromStr for ID {
     type Err = ParseIDError;
 
@@ -221,6 +239,7 @@ impl FromStr for ID {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ParseIDError {
     pub cause: String,
 }

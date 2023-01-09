@@ -63,6 +63,13 @@ impl fmt::Debug for Timestamp {
     }
 }
 
+#[cfg(feature = "defmt")]
+impl defmt::Format for Timestamp {
+    fn format(&self, f: defmt::Formatter) {
+        defmt::write!(f, "{}/{}", self.time, self.id);
+    }
+}
+
 #[cfg(feature = "std")]
 impl FromStr for Timestamp {
     type Err = ParseTimestampError;
@@ -85,6 +92,7 @@ impl FromStr for Timestamp {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(deature = "defmt", derive(defmt::Format))]
 pub struct ParseTimestampError {
     pub cause: String,
 }
@@ -93,7 +101,6 @@ pub struct ParseTimestampError {
 mod tests {
     use crate::*;
     use std::convert::TryFrom;
-    use std::time::UNIX_EPOCH;
 
     #[test]
     fn test_timestamp() {
@@ -101,27 +108,45 @@ mod tests {
         let id2: ID = ID::try_from([0x02]).unwrap();
 
         let ts1_epoch = Timestamp::new(Default::default(), id1);
-        assert_eq!(ts1_epoch.get_time().to_system_time(), UNIX_EPOCH);
+        #[cfg(feature = "std")]
+        assert_eq!(ts1_epoch.get_time().to_system_time(), std::time::UNIX_EPOCH);
+        #[cfg(not(feature = "std"))]
+        assert_eq!(ts1_epoch.get_time().as_u64(), 0);
         assert_eq!(ts1_epoch.get_id(), &id1);
 
         let ts2_epoch = Timestamp::new(Default::default(), id2);
-        assert_eq!(ts2_epoch.get_time().to_system_time(), UNIX_EPOCH);
+        #[cfg(feature = "std")]
+        assert_eq!(ts2_epoch.get_time().to_system_time(), std::time::UNIX_EPOCH);
+        #[cfg(not(feature = "std"))]
+        assert_eq!(ts2_epoch.get_time().as_u64(), 0);
         assert_eq!(ts2_epoch.get_id(), &id2);
 
         // Test that 2 Timestamps with same time but different ids are different and ordered
         assert_ne!(ts1_epoch, ts2_epoch);
         assert!(ts1_epoch < ts2_epoch);
 
+        #[cfg(feature = "std")]
         let now = system_time_clock();
+        #[cfg(not(feature = "std"))]
+        let now = zero_clock();
         let ts1_now = Timestamp::new(now, id1);
         let ts2_now = Timestamp::new(now, id2);
         assert_ne!(ts1_now, ts2_now);
         assert!(ts1_now < ts2_now);
-        assert!(ts1_epoch < ts1_now);
-        assert!(ts2_epoch < ts2_now);
 
-        let s = ts1_now.to_string();
-        assert_eq!(ts1_now, s.parse().unwrap());
+        #[cfg(feature = "std")]
+        {
+            // These are not necessarily true in no_std since we use a new zero-based (incremental) clock
+            assert!(ts1_epoch < ts1_now);
+            assert!(ts2_epoch < ts2_now);
+        }
+
+        #[cfg(feature = "std")]
+        {
+            // We do not care about parsing human-readable timestamps in no_std
+            let s = ts1_now.to_string();
+            assert_eq!(ts1_now, s.parse().unwrap());
+        }
 
         let diff = ts1_now.get_diff_duration(&ts2_now);
         assert_eq!(diff, Duration::from_secs(0));

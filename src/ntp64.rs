@@ -200,6 +200,13 @@ impl fmt::Debug for NTP64 {
     }
 }
 
+#[cfg(feature = "defmt")]
+impl defmt::Format for NTP64 {
+    fn format(&self, f: defmt::Formatter) {
+        defmt::write!(f, "{:x}", self.0);
+    }
+}
+
 impl From<Duration> for NTP64 {
     fn from(duration: Duration) -> NTP64 {
         let secs = duration.as_secs();
@@ -229,6 +236,7 @@ impl FromStr for NTP64 {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ParseNTP64Error {
     pub cause: String,
 }
