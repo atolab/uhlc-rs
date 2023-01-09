@@ -51,10 +51,6 @@
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-#![cfg_attr(
-    all(not(feature = "std"), feature = "error_in_core"),
-    feature(error_in_core)
-)] // core::error::Error is not needed if using std
 
 #[cfg(not(feature = "std"))]
 extern crate alloc;

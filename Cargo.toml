@@ -35,8 +35,6 @@ std = [
     "uuid/std"
 ]
 defmt = ["dep:defmt"] # Enables defmt for logging in no_std
-nightly = ["error_in_core"] # Enables experimental features -- requires nightly rust toolchain
-error_in_core = [] # Allows to use core::error::Error
 
 [dependencies]
 defmt = { version = "0.3.2", features = ["alloc"], optional = true }

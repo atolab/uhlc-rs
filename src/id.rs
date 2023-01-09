@@ -109,8 +109,6 @@ impl defmt::Format for SizeError {
 
 #[cfg(feature = "std")]
 impl std::error::Error for SizeError {}
-#[cfg(all(not(feature = "std"), feature = "error_in_core"))]
-impl core::error::Error for SizeError {}
 
 macro_rules! impl_from_sized_slice_for_id {
     ($N: expr) => {
