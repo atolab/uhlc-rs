@@ -46,6 +46,7 @@ use alloc::string::{String, ToString};
 /// assert_eq!(id.size(), 16);
 /// ```
 #[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ID(NonZeroU128);
 
 impl ID {
@@ -84,6 +85,7 @@ impl From<Uuid> for ID {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SizeError(usize);
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -93,17 +95,6 @@ impl fmt::Display for SizeError {
             ID::MAX_SIZE,
             self.0
         )
-    }
-}
-#[cfg(feature = "defmt")]
-impl defmt::Format for SizeError {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(
-            f,
-            "Maximum ID size ({} bytes) exceeded: {}",
-            ID::MAX_SIZE,
-            self.0
-        );
     }
 }
 
@@ -210,13 +201,6 @@ impl fmt::Debug for ID {
 impl fmt::Display for ID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, f)
-    }
-}
-
-#[cfg(feature = "defmt")]
-impl defmt::Format for ID {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "{}", hex::encode_upper(self.as_slice()));
     }
 }
 

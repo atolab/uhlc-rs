@@ -20,6 +20,7 @@ use alloc::string::String;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timestamp {
     time: NTP64,
     id: ID,
@@ -60,13 +61,6 @@ impl fmt::Display for Timestamp {
 impl fmt::Debug for Timestamp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}/{:?}", self.time, self.id)
-    }
-}
-
-#[cfg(feature = "defmt")]
-impl defmt::Format for Timestamp {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "{}/{}", self.time, self.id);
     }
 }
 
