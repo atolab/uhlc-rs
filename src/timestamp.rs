@@ -9,14 +9,12 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use super::{ID, NTP64};
+use alloc::string::String;
 use core::{fmt, time::Duration};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
 use core::str::FromStr;
-
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
@@ -94,7 +92,7 @@ pub struct ParseTimestampError {
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use std::convert::TryFrom;
+    use core::convert::TryFrom;
 
     #[test]
     fn test_timestamp() {

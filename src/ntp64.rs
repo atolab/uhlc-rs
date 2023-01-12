@@ -8,6 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
+use alloc::string::String;
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::time::Duration;
@@ -19,9 +20,6 @@ use {
     humantime::{format_rfc3339_nanos, parse_rfc3339},
     std::time::{SystemTime, UNIX_EPOCH},
 };
-
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
 
 // maximal number of seconds that can be represented in the 32-bits part
 const MAX_NB_SEC: u64 = (1u64 << 32) - 1;

@@ -8,6 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
+use alloc::string::{String, ToString};
 use core::cmp::Ordering;
 use core::convert::{TryFrom, TryInto};
 use core::fmt;
@@ -16,9 +17,6 @@ use core::num::NonZeroU128;
 use core::str::FromStr;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-#[cfg(not(feature = "std"))]
-use alloc::string::{String, ToString};
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
 /// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `NonZeroU8`),
