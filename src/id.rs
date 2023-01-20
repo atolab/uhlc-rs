@@ -84,7 +84,7 @@ impl From<Uuid> for ID {
 
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct SizeError(usize);
+pub struct SizeError(pub usize);
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
