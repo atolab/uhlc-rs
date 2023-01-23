@@ -101,13 +101,7 @@ This crate provides the following Cargo features:
    `alloc` crate is still required;
 
  * `defmt`: allows the relevant data structures to implement the `defmt::Format` trait,
-   used instead of `std::fmt::{Debug, Display}` for logging in `no_std` environments;
-
- * `nightly`: allows to enable all the experimental features at once;
-
- * `error_in_core`: experimental feature (requires Rust nightly toolchain) that enables
-   the usage of the trait `core::error::Error` instead of `std::error::Error`. Does nothing
-   if `std` is also enabled.
+   used instead of `std::fmt::{Debug, Display}` for logging in `no_std` environments.
 
 Only the `std` feature is enabled by default.
 
@@ -134,10 +128,8 @@ with respect to the `std` implementation include:
    by `spin::Mutex`, which is based on spinlocks instead of relying on some operating system
    functionality;
 
- * since `core::error::Error` is still an experimental feature in Rust, `SizeError`
-   can implement the `Error` trait only if the feature `error_in_core` is enabled;
-
- * tests (with `cargo test`) can be run only on `std` targets.
+ * tests (with `cargo test`) can be run only on `std` targets, but different code is compiled
+   (and hence tested) depending on the features specified.
 
 ## Usages
 **uhlc** is currently used in [Eclipse zenoh](https://github.com/eclipse-zenoh/zenoh).

@@ -8,6 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
+use alloc::string::String;
 use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::time::Duration;
@@ -19,9 +20,6 @@ use {
     humantime::{format_rfc3339_nanos, parse_rfc3339},
     std::time::{SystemTime, UNIX_EPOCH},
 };
-
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
 
 // maximal number of seconds that can be represented in the 32-bits part
 const MAX_NB_SEC: u64 = (1u64 << 32) - 1;
@@ -45,6 +43,7 @@ const NANO_PER_SEC: u64 = 1_000_000_000;
 /// define an EPOCH. Only the [`NTP64::to_system_time()`] and [`std::fmt::Display::fmt()`] operations assume that
 /// it's relative to UNIX_EPOCH (1st Jan 1970) to display the timpestamp in RFC-3339 format.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NTP64(pub u64);
 
 impl NTP64 {
@@ -197,13 +196,6 @@ impl fmt::Display for NTP64 {
 impl fmt::Debug for NTP64 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:x}", self.0)
-    }
-}
-
-#[cfg(feature = "defmt")]
-impl defmt::Format for NTP64 {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "{:x}", self.0);
     }
 }
 

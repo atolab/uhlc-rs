@@ -50,18 +50,12 @@
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
-#![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
-#![cfg_attr(
-    all(not(feature = "std"), feature = "error_in_core"),
-    feature(error_in_core)
-)] // core::error::Error is not needed if using std
-
-#[cfg(not(feature = "std"))]
+#![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 
+use alloc::{format, string::String};
 use core::cmp;
 use core::time::Duration;
-use log::warn;
 
 #[cfg(feature = "std")]
 use {
@@ -72,10 +66,7 @@ use {
 };
 
 #[cfg(not(feature = "std"))]
-use {
-    alloc::{format, string::String},
-    spin::Mutex, // No_std-friendly alternative to std::sync::Mutex
-};
+use spin::Mutex; // No_std-friendly alternative to std::sync::Mutex
 
 mod id;
 pub use id::*;
@@ -307,7 +298,10 @@ impl HLC {
                 msg_time,
                 now
             );
-            warn!("{}", err_msg);
+            #[cfg(feature = "std")]
+            log::warn!("{}", err_msg);
+            #[cfg(feature = "defmt")]
+            defmt::warn!("{}", err_msg);
             Err(err_msg)
         } else {
             let mut last_time = lock!(self.last_time);
@@ -376,6 +370,7 @@ mod tests {
 
     #[test]
     fn hlc_parallel() {
+        use alloc::vec::Vec;
         task::block_on(async {
             let id0: ID = ID::try_from([0x01]).unwrap();
             let id1: ID = ID::try_from([0x02]).unwrap();

@@ -8,6 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
+use alloc::string::{String, ToString};
 use core::cmp::Ordering;
 use core::convert::{TryFrom, TryInto};
 use core::fmt;
@@ -16,9 +17,6 @@ use core::num::NonZeroU128;
 use core::str::FromStr;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
-#[cfg(not(feature = "std"))]
-use alloc::string::{String, ToString};
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
 /// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `NonZeroU8`),
@@ -46,6 +44,7 @@ use alloc::string::{String, ToString};
 /// assert_eq!(id.size(), 16);
 /// ```
 #[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ID(NonZeroU128);
 
 impl ID {
@@ -84,7 +83,8 @@ impl From<Uuid> for ID {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct SizeError(usize);
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct SizeError(pub usize);
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -95,22 +95,9 @@ impl fmt::Display for SizeError {
         )
     }
 }
-#[cfg(feature = "defmt")]
-impl defmt::Format for SizeError {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(
-            f,
-            "Maximum ID size ({} bytes) exceeded: {}",
-            ID::MAX_SIZE,
-            self.0
-        );
-    }
-}
 
 #[cfg(feature = "std")]
 impl std::error::Error for SizeError {}
-#[cfg(all(not(feature = "std"), feature = "error_in_core"))]
-impl core::error::Error for SizeError {}
 
 macro_rules! impl_from_sized_slice_for_id {
     ($N: expr) => {
@@ -212,13 +199,6 @@ impl fmt::Debug for ID {
 impl fmt::Display for ID {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(self, f)
-    }
-}
-
-#[cfg(feature = "defmt")]
-impl defmt::Format for ID {
-    fn format(&self, f: defmt::Formatter) {
-        defmt::write!(f, "{}", hex::encode_upper(self.as_slice()));
     }
 }
 
