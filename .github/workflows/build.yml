@@ -44,3 +44,26 @@ jobs:
         run: |
           cargo doc --all --no-deps
           echo '<meta http-equiv=refresh content=0;url=uhlc/index.html>' > ./target/doc/index.html
+
+  nostd:
+    name: Run no_std checks
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install nightly Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: x86_64-unknown-none # Generic no_std target architecture
+          override: true
+      
+      - name: Perform no_std checks
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --bin nostd_check --target x86_64-unknown-none --manifest-path ci/nostd-check/Cargo.toml
