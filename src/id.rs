@@ -9,12 +9,14 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use alloc::string::{String, ToString};
-use core::cmp::Ordering;
-use core::convert::{TryFrom, TryInto};
-use core::fmt;
-use core::hash::{Hash, Hasher};
-use core::num::NonZeroU128;
-use core::str::FromStr;
+use core::{
+    cmp::Ordering,
+    convert::{TryFrom, TryInto},
+    fmt,
+    hash::Hash,
+    num::NonZeroU128,
+    str::FromStr,
+};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -43,7 +45,7 @@ use uuid::Uuid;
 /// let id = ID::from(Uuid::new_v4());
 /// assert_eq!(id.size(), 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq)]
+#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ID(NonZeroU128);
 
@@ -56,11 +58,12 @@ impl ID {
     pub fn size(&self) -> usize {
         // Safety: here, we're voluntarily bypassing the platform's endianness.
         // All constructors MUST ensure the value is actually LE encoded.
-        16 - (if cfg!(target_endian = "little") {
-            self.0.leading_zeros()
-        } else {
-            self.0.trailing_zeros()
-        } / 8) as usize
+        Self::MAX_SIZE
+            - (if cfg!(target_endian = "little") {
+                self.0.leading_zeros()
+            } else {
+                self.0.trailing_zeros()
+            } / 8) as usize
     }
 
     /// This ID as a slice
@@ -73,12 +76,20 @@ impl ID {
     }
 }
 
+impl From<ID> for Uuid {
+    #[inline]
+    fn from(id: ID) -> Self {
+        Uuid::from_u128(id.0.get())
+    }
+}
+
 impl From<Uuid> for ID {
     #[inline]
     fn from(uuid: Uuid) -> Self {
-        uuid.as_bytes()
+        uuid.as_u128()
+            .to_le_bytes()
             .try_into()
-            .expect("Uuids should always be non-null")
+            .expect("Uuid should always be non-null")
     }
 }
 
@@ -152,7 +163,7 @@ impl TryFrom<&[u8]> for ID {
         }
         let mut id = 0u128;
         unsafe {
-            core::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..size]
+            core::mem::transmute::<&mut u128, &mut [u8; Self::MAX_SIZE]>(&mut id)[..size]
                 .copy_from_slice(slice);
             match NonZeroU128::new(id) {
                 Some(id) => Ok(Self(id)),
@@ -179,14 +190,6 @@ impl Ord for ID {
         } else {
             u128::from_le(self.0.get()).cmp(&u128::from_le(other.0.get()))
         }
-    }
-}
-
-#[allow(clippy::derive_hash_xor_eq)]
-impl Hash for ID {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_slice().hash(state);
     }
 }
 
