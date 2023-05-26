@@ -20,7 +20,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
-/// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `NonZeroU8`),
+/// This struct has a constant memory size (holding internally a `NonZeroU8`),
 /// allowing allocations on the stack for better performances.
 ///
 /// # Examples
@@ -33,8 +33,9 @@ use serde::{Deserialize, Serialize};
 ///            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 /// let id = ID::try_from(&buf[..3]).unwrap();
 /// assert_eq!(id.size(), 3);
-/// assert_eq!(id.as_slice(), &[0x1a, 0x2b, 0x3c]);
-/// assert_eq!(id.to_string(), "1a2b3c".to_string());
+/// assert_eq!(id.to_le_bytes(), buf);
+/// assert_eq!(&id.to_le_bytes()[..id.size()], &[0x1a, 0x2b, 0x3c]);
+/// assert_eq!(id.to_string(), "1a2b3c");
 /// ```
 ///
 /// ```
@@ -65,17 +66,11 @@ impl ID {
     }
 
     #[inline]
-    pub fn as_slice(&self) -> &[u8] {
-        // All constructors MUST ensure the value is actually LE encoded.
-        let slice = unsafe { core::mem::transmute::<&u128, &[u8; 16]>(&self.0.get()) };
-        &slice[..self.size()]
-    }
-
-    #[inline]
     pub fn rand() -> Self {
+        use rand::rngs::OsRng;
         // Safety: 0 is not a valid ID. Here, we explicitly generate
-        //         the ID starting from 1. So, new_unchecked it's safe.
-        let id = unsafe { NonZeroU128::new_unchecked(rand::thread_rng().gen_range(1..u128::MAX)) };
+        //         the ID starting from 1. So, new_unchecked() is safe.
+        let id = unsafe { NonZeroU128::new_unchecked(OsRng.gen_range(1..u128::MAX)) };
         Self(id)
     }
 }
@@ -247,7 +242,9 @@ impl FromStr for ID {
 
         // hex::decode() only accepts even-sized string
         let s = if s.len() % 2 != 0 {
-            format!("0{}", s)
+            let mut t = "0".to_string();
+            t.push_str(s);
+            t
         } else {
             s.to_string()
         };
@@ -288,18 +285,18 @@ mod tests {
     #[test]
     fn parse_display() {
         let id = "1".parse::<crate::ID>().unwrap();
-        assert_eq!(&format!("{}", id), "1");
+        assert_eq!(id.to_string(), "1");
 
         let id = "1bc0".parse::<crate::ID>().unwrap();
-        assert_eq!(&format!("{}", id), "1bc0");
+        assert_eq!(id.to_string(), "1bc0");
 
         let id = "abcd".parse::<crate::ID>().unwrap();
-        assert_eq!(&format!("{}", id), "abcd");
+        assert_eq!(id.to_string(), "abcd");
 
         let id = "6bd9cb5f9f2644508fbbb0df1d6cce3a"
             .parse::<crate::ID>()
             .unwrap();
-        assert_eq!(&format!("{}", id), "6bd9cb5f9f2644508fbbb0df1d6cce3a");
+        assert_eq!(id.to_string(), "6bd9cb5f9f2644508fbbb0df1d6cce3a");
 
         "0".parse::<crate::ID>().unwrap_err();
         "0bcd".parse::<crate::ID>().unwrap_err();
