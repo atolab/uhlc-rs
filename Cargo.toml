@@ -32,7 +32,6 @@ std = [
     "lazy_static",
     "log",
     "serde/std",
-    "uuid/std"
 ]
 defmt = ["dep:defmt"] # Enables defmt for logging in no_std
 
@@ -42,12 +41,9 @@ hex = { version = "0.4", default-features = false, features = ["alloc"] }
 humantime = { version = "2.0", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 log = { version = "0.4", optional = true } # Used only in std
+rand = "0.8.5"
 serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] } # No_std alternative for std::sync::Mutex
-uuid = { version = "1.1", default-features = false, features = ["v4"] }
-    # NOTE: Generation of UUIDv4 on embedded devices requires a custom implementation
-    #       for getrandom::getrandom. Refer to the following page for more information:
-    #       https://docs.rs/getrandom/latest/getrandom/#unsupported-targets
 
 [dev-dependencies]
 async-std = "1.6"

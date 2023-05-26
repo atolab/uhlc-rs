@@ -10,15 +10,14 @@
 //
 use alloc::string::{String, ToString};
 use core::{
-    cmp::Ordering,
     convert::{TryFrom, TryInto},
     fmt,
     hash::Hash,
-    num::NonZeroU128,
+    num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8},
     str::FromStr,
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
 /// This struct has a constant memory size (holding internally a `[u8; MAX_SIZE]` + a `NonZeroU8`),
@@ -35,61 +34,49 @@ use uuid::Uuid;
 /// let id = ID::try_from(&buf[..3]).unwrap();
 /// assert_eq!(id.size(), 3);
 /// assert_eq!(id.as_slice(), &[0x1a, 0x2b, 0x3c]);
-/// assert_eq!(id.to_string(), "1A2B3C".to_string());
+/// assert_eq!(id.to_string(), "1a2b3c".to_string());
 /// ```
 ///
 /// ```
 /// use uhlc::ID;
-/// use uuid::Uuid;
 ///
-/// let id = ID::from(Uuid::new_v4());
-/// assert_eq!(id.size(), 16);
+/// let id = ID::rand();
+/// assert!(id.size() <= 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, Hash)]
+#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[repr(transparent)]
 pub struct ID(NonZeroU128);
 
 impl ID {
     /// The maximum size of an ID in bytes: 16.
-    pub const MAX_SIZE: usize = 16;
+    pub const MAX_SIZE: usize = u128::BITS as usize / 8;
 
     /// The size of this ID in bytes
     #[inline]
     pub fn size(&self) -> usize {
-        // Safety: here, we're voluntarily bypassing the platform's endianness.
-        // All constructors MUST ensure the value is actually LE encoded.
-        Self::MAX_SIZE
-            - (if cfg!(target_endian = "little") {
-                self.0.leading_zeros()
-            } else {
-                self.0.trailing_zeros()
-            } / 8) as usize
+        Self::MAX_SIZE - (self.0.get().to_le().leading_zeros() as usize / 8)
     }
 
-    /// This ID as a slice
+    /// This ID as bytes
+    #[inline]
+    pub fn to_le_bytes(&self) -> [u8; Self::MAX_SIZE] {
+        self.0.get().to_le_bytes()
+    }
+
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
-        // Safety: here, we're voluntarily ignoring the platform's endianness.
         // All constructors MUST ensure the value is actually LE encoded.
-        let slice = unsafe { core::mem::transmute::<&NonZeroU128, &[u8; 16]>(&self.0) };
+        let slice = unsafe { core::mem::transmute::<&u128, &[u8; 16]>(&self.0.get()) };
         &slice[..self.size()]
     }
-}
 
-impl From<ID> for Uuid {
     #[inline]
-    fn from(id: ID) -> Self {
-        Uuid::from_u128(id.0.get())
-    }
-}
-
-impl From<Uuid> for ID {
-    #[inline]
-    fn from(uuid: Uuid) -> Self {
-        uuid.as_u128()
-            .to_le_bytes()
-            .try_into()
-            .expect("Uuid should always be non-null")
+    pub fn rand() -> Self {
+        // Safety: 0 is not a valid ID. Here, we explicitly generate
+        //         the ID starting from 1. So, new_unchecked it's safe.
+        let id = unsafe { NonZeroU128::new_unchecked(rand::thread_rng().gen_range(1..u128::MAX)) };
+        Self(id)
     }
 }
 
@@ -114,23 +101,22 @@ macro_rules! impl_from_sized_slice_for_id {
     ($N: expr) => {
         impl TryFrom<&[u8; $N]> for ID {
             type Error = SizeError;
+
+            // Bytes are interpreted as little endian
             fn try_from(value: &[u8; $N]) -> Result<Self, Self::Error> {
-                let mut id = 0u128;
-                // Safety: all operations on the u128s constructed from slices treat them as little-endian.
-                // Always constructing as little endian from a slice makes for less surprising behaviours when
-                // inspecting on wire.
-                unsafe {
-                    core::mem::transmute::<&mut u128, &mut [u8; 16]>(&mut id)[..$N]
-                        .copy_from_slice(value);
-                }
+                let mut id = [0u8; ID::MAX_SIZE];
+                id[..$N].copy_from_slice(value);
+                let id = u128::from_le_bytes(id);
                 match NonZeroU128::new(id) {
                     Some(id) => Ok(Self(id)),
                     None => Err(SizeError(0)),
                 }
             }
         }
+
         impl TryFrom<[u8; $N]> for ID {
             type Error = SizeError;
+
             fn try_from(id: [u8; $N]) -> Result<Self, Self::Error> {
                 (&id).try_into()
             }
@@ -156,46 +142,139 @@ impl_from_sized_slice_for_id!(16);
 
 impl TryFrom<&[u8]> for ID {
     type Error = SizeError;
+
+    // Bytes slice is interpreted as little endian
     fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
         let size = slice.len();
         if size > Self::MAX_SIZE {
             return Err(SizeError(size));
         }
-        let mut id = 0u128;
-        unsafe {
-            core::mem::transmute::<&mut u128, &mut [u8; Self::MAX_SIZE]>(&mut id)[..size]
-                .copy_from_slice(slice);
-            match NonZeroU128::new(id) {
-                Some(id) => Ok(Self(id)),
-                None => Err(SizeError(0)),
-            }
+        let mut id = [0u8; ID::MAX_SIZE];
+        id[..size].copy_from_slice(slice);
+        let id = u128::from_le_bytes(id);
+        match NonZeroU128::new(id) {
+            Some(id) => Ok(Self(id)),
+            None => Err(SizeError(0)),
         }
     }
 }
 
-impl PartialOrd for ID {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+impl TryFrom<u8> for ID {
+    type Error = SizeError;
+
+    fn try_from(id: u8) -> Result<Self, Self::Error> {
+        id.to_le_bytes().try_into()
     }
 }
 
-impl Ord for ID {
-    #[inline]
-    fn cmp(&self, other: &Self) -> Ordering {
-        // Safety: here, we're voluntarily bypassing the platform's endianness.
-        // All constructors MUST ensure the value is actually LE encoded.
-        if cfg!(target_endian = "little") {
-            self.0.cmp(&other.0)
+impl From<NonZeroU8> for ID {
+    fn from(id: NonZeroU8) -> Self {
+        Self(id.into())
+    }
+}
+
+impl TryFrom<u16> for ID {
+    type Error = SizeError;
+
+    fn try_from(id: u16) -> Result<Self, Self::Error> {
+        id.to_le_bytes().try_into()
+    }
+}
+
+impl From<NonZeroU16> for ID {
+    fn from(id: NonZeroU16) -> Self {
+        Self(id.into())
+    }
+}
+
+impl TryFrom<u32> for ID {
+    type Error = SizeError;
+
+    fn try_from(id: u32) -> Result<Self, Self::Error> {
+        id.to_le_bytes().try_into()
+    }
+}
+
+impl From<NonZeroU32> for ID {
+    fn from(id: NonZeroU32) -> Self {
+        Self(id.into())
+    }
+}
+
+impl TryFrom<u64> for ID {
+    type Error = SizeError;
+
+    fn try_from(id: u64) -> Result<Self, Self::Error> {
+        id.to_le_bytes().try_into()
+    }
+}
+
+impl From<NonZeroU64> for ID {
+    fn from(id: NonZeroU64) -> Self {
+        Self(id.into())
+    }
+}
+
+impl TryFrom<u128> for ID {
+    type Error = SizeError;
+
+    fn try_from(id: u128) -> Result<Self, Self::Error> {
+        id.to_le_bytes().try_into()
+    }
+}
+
+impl From<NonZeroU128> for ID {
+    fn from(id: NonZeroU128) -> Self {
+        Self(id)
+    }
+}
+
+impl FromStr for ID {
+    type Err = ParseIDError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Err(ParseIDError {
+                cause: "Empty strings are not valid".to_string(),
+            });
+        }
+
+        if s.starts_with('0') {
+            return Err(ParseIDError {
+                cause: "Leading 0s are not valid".to_string(),
+            });
+        }
+
+        // hex::decode() only accepts even-sized string
+        let s = if s.len() % 2 != 0 {
+            format!("0{}", s)
         } else {
-            u128::from_le(self.0.get()).cmp(&u128::from_le(other.0.get()))
-        }
+            s.to_string()
+        };
+
+        let bs = hex::decode(s).map_err(|e| ParseIDError {
+            cause: e.to_string(),
+        })?;
+
+        ID::try_from(bs.as_slice()).map_err(|e| ParseIDError {
+            cause: e.to_string(),
+        })
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+pub struct ParseIDError {
+    pub cause: String,
 }
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode_upper(self.as_slice()))
+        let bs = &self.to_le_bytes()[..self.size()];
+        let s = hex::encode(bs);
+        // hex::encode() always returns even-sized string
+        let t = s.as_str().strip_prefix('0').unwrap_or(s.as_str());
+        write!(f, "{}", t)
     }
 }
 
@@ -205,24 +284,27 @@ impl fmt::Display for ID {
     }
 }
 
-impl FromStr for ID {
-    type Err = ParseIDError;
+mod tests {
+    #[test]
+    fn parse_display() {
+        let id = "1".parse::<crate::ID>().unwrap();
+        assert_eq!(&format!("{}", id), "1");
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        hex::decode(s)
-            .map_err(|e| ParseIDError {
-                cause: e.to_string(),
-            })
-            .and_then(|bytes| {
-                ID::try_from(bytes.as_slice()).map_err(|e| ParseIDError {
-                    cause: e.to_string(),
-                })
-            })
+        let id = "1bc0".parse::<crate::ID>().unwrap();
+        assert_eq!(&format!("{}", id), "1bc0");
+
+        let id = "abcd".parse::<crate::ID>().unwrap();
+        assert_eq!(&format!("{}", id), "abcd");
+
+        let id = "6bd9cb5f9f2644508fbbb0df1d6cce3a"
+            .parse::<crate::ID>()
+            .unwrap();
+        assert_eq!(&format!("{}", id), "6bd9cb5f9f2644508fbbb0df1d6cce3a");
+
+        "0".parse::<crate::ID>().unwrap_err();
+        "0bcd".parse::<crate::ID>().unwrap_err();
+        "6bd9cb5f9f2644508fbbb0df1d6cce3a0"
+            .parse::<crate::ID>()
+            .unwrap_err();
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct ParseIDError {
-    pub cause: String,
 }

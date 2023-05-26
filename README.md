@@ -20,7 +20,7 @@ Then in your code:
 ```rust
 use uhlc::*;
 
-// create an HLC with a generated UUID and relying on SystemTime::now()
+// create an HLC with a random u128 and relying on SystemTime::now()
 let hlc = HLC::default();
 
 // generate a timestamp
@@ -44,7 +44,7 @@ You can find more detailled explanations in:
 
 ## Why "Unique" ?
 In this implementation, each HLC instance is associated with an identifier that must be
-unique accross the system (by default a UUIDv4). Each generated timestamp, in addition
+unique accross the system (by default a random u128). Each generated timestamp, in addition
 of the hybrid time, contains the identifier of the HLC that generated it, and it
 therefore unique across the system.
 
@@ -67,7 +67,7 @@ be correlated. I.e.:
    between those events (one is not a consequence of the other).
 
 ## Implementation details
-The `uhlc::HLC::default()` operation generate an UUIDv4 as identifier and uses
+The `uhlc::HLC::default()` operation generate a random u128 as identifier and uses
 `std::time::SystemTime::now()` as physical clock.  
 But using the `uhlc::HLCBuilder` allows you to configure the `HLC` differently. Example:  
 ```Rust
