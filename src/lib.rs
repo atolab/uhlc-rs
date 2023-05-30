@@ -476,5 +476,4 @@ mod tests {
         let future_ts = Timestamp::new(future_time, id);
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
-
 }
