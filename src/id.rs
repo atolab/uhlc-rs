@@ -50,21 +50,33 @@ use serde::{Deserialize, Serialize};
 pub struct ID(NonZeroU128);
 
 impl ID {
-    /// The maximum size of an ID in bytes: 16.
+    /// The maximum size of an le-encoded [`ID`](`ID`) in bytes: 16.
     pub const MAX_SIZE: usize = u128::BITS as usize / 8;
 
-    /// The size of this ID in bytes
+    /// The size of this [`ID`](`ID`) in bytes. I.e., the number of significant bytes of the le-encoded [`ID`](`ID`).
     #[inline]
     pub fn size(&self) -> usize {
         Self::MAX_SIZE - (self.0.get().to_le().leading_zeros() as usize / 8)
     }
 
     /// This ID as bytes
+    ///
+    /// If you want to retrive a le-encoded slice of the [`ID`](`ID`), you can do it as follows:
+    /// ```
+    /// use uhlc::ID;
+    /// use std::convert::TryFrom;
+    ///
+    /// let id = ID::try_from(&[0x01]).unwrap();
+    /// let slice = &id.to_le_bytes()[..id.size()];
+    /// assert_eq!(1, slice.len());
+    /// assert_eq!(&[0x01], slice);
+    /// ```
     #[inline]
     pub fn to_le_bytes(&self) -> [u8; Self::MAX_SIZE] {
         self.0.get().to_le_bytes()
     }
 
+    /// Generate a random [`ID`](`ID`).
     #[inline]
     pub fn rand() -> Self {
         use rand::rngs::OsRng;
