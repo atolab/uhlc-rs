@@ -22,7 +22,7 @@
 //! ```
 //! use uhlc::HLC;
 //!
-//! // create an HLC with a generated UUID and relying on SystemTime::now()
+//! // create an HLC with a generated random ID and relying on SystemTime::now()
 //! let hlc = HLC::default();
 //!
 //! // generate timestamps
@@ -128,7 +128,7 @@ pub struct HLCBuilder {
 impl HLCBuilder {
     ///
     /// Constructs a new HLCBuilder for the creation of an [`HLC`], with the following default configuration:
-    ///  * a random UUID as HLC identifier.
+    ///  * a random u128 as HLC identifier.
     ///   Can be changed calling [`Self::with_id()`].
     ///  * [`system_time_clock()`] as physical clock (i.e. the ).
     ///   Can be changed calling [`Self::with_clock()`].
@@ -178,7 +178,7 @@ impl Default for HLCBuilder {
     fn default() -> Self {
         HLCBuilder {
             hlc: HLC {
-                id: uuid::Uuid::new_v4().into(),
+                id: ID::rand(),
                 #[cfg(feature = "std")]
                 clock: system_time_clock,
                 #[cfg(not(feature = "std"))]
@@ -319,7 +319,7 @@ impl HLC {
 }
 
 impl Default for HLC {
-    /// Create a new [`HLC`] with a generated UUID and using
+    /// Create a new [`HLC`] with a random u128 ID and using
     /// [`system_time_clock()`] as physical clock.
     /// This is equivalent to `HLCBuilder::default().build()`
     fn default() -> Self {
@@ -461,7 +461,7 @@ mod tests {
 
     #[test]
     fn hlc_update_with_timestamp() {
-        let id: ID = ID::from(uuid::Uuid::new_v4());
+        let id: ID = ID::rand();
         let hlc = HLCBuilder::new().with_id(id).build();
 
         // Test that updating with an old Timestamp don't break the HLC
