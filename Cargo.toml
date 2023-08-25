@@ -27,7 +27,6 @@ edition = "2018"
 [features]
 default = ["std"]
 std = [
-    "hex/std",
     "humantime",
     "lazy_static",
     "log",
@@ -38,7 +37,6 @@ defmt = ["dep:defmt"] # Enables defmt for logging in no_std
 
 [dependencies]
 defmt = { version = "0.3.2", features = ["alloc"], optional = true } # Replaces log in no_std
-hex = { version = "0.4", default-features = false, features = ["alloc"] }
 humantime = { version = "2.0", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 log = { version = "0.4", optional = true } # Used only in std

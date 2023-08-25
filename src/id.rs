@@ -31,11 +31,16 @@ use serde::{Deserialize, Serialize};
 ///
 /// let buf = [0x1a, 0x2b, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00,
 ///            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
-/// let id = ID::try_from(&buf[..3]).unwrap();
-/// assert_eq!(id.size(), 3);
-/// assert_eq!(id.to_le_bytes(), buf);
-/// assert_eq!(&id.to_le_bytes()[..id.size()], &[0x1a, 0x2b, 0x3c]);
-/// assert_eq!(id.to_string(), "1a2b3c");
+/// let id1 = ID::try_from(&buf[..3]).unwrap();
+/// assert_eq!(id1.size(), 3);
+/// assert_eq!(id1.to_le_bytes(), buf);
+/// assert_eq!(&id1.to_le_bytes()[..id1.size()], &[0x1a, 0x2b, 0x3c]);
+/// let id2: ID = "3c2b1a".parse().unwrap();
+/// assert_eq!(id2.size(), 3);
+/// assert_eq!(id2.to_le_bytes(), buf);
+/// assert_eq!(&id2.to_le_bytes()[..id2.size()], &[0x1a, 0x2b, 0x3c]);
+/// assert_eq!(id2.to_string(), "3c2b1a");
+/// assert_eq!(id1, id2);
 /// ```
 ///
 /// ```
@@ -252,20 +257,10 @@ impl FromStr for ID {
             });
         }
 
-        // hex::decode() only accepts even-sized string
-        let s = if s.len() % 2 != 0 {
-            let mut t = "0".to_string();
-            t.push_str(s);
-            t
-        } else {
-            s.to_string()
-        };
-
-        let bs = hex::decode(s).map_err(|e| ParseIDError {
+        let bs = u128::from_str_radix(s, 16).map_err(|e| ParseIDError {
             cause: e.to_string(),
         })?;
-
-        ID::try_from(bs.as_slice()).map_err(|e| ParseIDError {
+        ID::try_from(bs).map_err(|e| ParseIDError {
             cause: e.to_string(),
         })
     }
@@ -279,9 +274,8 @@ pub struct ParseIDError {
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let bs = &self.to_le_bytes()[..self.size()];
-        let s = hex::encode(bs);
-        // hex::encode() always returns even-sized string
+        let id = self.0.get();
+        let s = format!("{:02x}", id);
         let t = s.as_str().strip_prefix('0').unwrap_or(s.as_str());
         write!(f, "{}", t)
     }
@@ -301,6 +295,12 @@ mod tests {
 
         let id = "1bc0".parse::<crate::ID>().unwrap();
         assert_eq!(id.to_string(), "1bc0");
+
+        let id = "ff00".parse::<crate::ID>().unwrap();
+        assert_eq!(id.to_string(), "ff00");
+
+        let id = "ff0".parse::<crate::ID>().unwrap();
+        assert_eq!(id.to_string(), "ff0");
 
         let id = "abcd".parse::<crate::ID>().unwrap();
         assert_eq!(id.to_string(), "abcd");
