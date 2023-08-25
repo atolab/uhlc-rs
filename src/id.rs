@@ -34,6 +34,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// let buf = [0x1a, 0x2b, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00,
 ///            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+/// // NOTE: ID::try_from(slice: &[u8]) assumes the slice is in little endian
 /// let id1 = ID::try_from(&buf[..3]).unwrap();
 /// assert_eq!(id1.size(), 3);
 /// assert_eq!(id1.to_le_bytes(), buf);
@@ -117,7 +118,8 @@ macro_rules! impl_from_sized_slice_for_id {
         impl TryFrom<&[u8; $N]> for ID {
             type Error = SizeError;
 
-            // Bytes are interpreted as little endian
+            /// Performs the conversion.
+            /// NOTE: the bytes slice is interpreted as little endian
             fn try_from(value: &[u8; $N]) -> Result<Self, Self::Error> {
                 let mut id = [0u8; ID::MAX_SIZE];
                 id[..$N].copy_from_slice(value);
@@ -132,6 +134,8 @@ macro_rules! impl_from_sized_slice_for_id {
         impl TryFrom<[u8; $N]> for ID {
             type Error = SizeError;
 
+            /// Performs the conversion.
+            /// NOTE: the bytes slice is interpreted as little endian
             fn try_from(id: [u8; $N]) -> Result<Self, Self::Error> {
                 (&id).try_into()
             }
@@ -158,7 +162,8 @@ impl_from_sized_slice_for_id!(16);
 impl TryFrom<&[u8]> for ID {
     type Error = SizeError;
 
-    // Bytes slice is interpreted as little endian
+    /// Performs the conversion.  
+    /// NOTE: the bytes slice is interpreted as little endian
     fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
         let size = slice.len();
         if size > Self::MAX_SIZE {
