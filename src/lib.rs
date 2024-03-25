@@ -448,9 +448,9 @@ mod tests {
             let mut all_times: Vec<Timestamp> = vecs
                 .0
                 .into_iter()
-                .chain(vecs.1.into_iter())
-                .chain(vecs.2.into_iter())
-                .chain(vecs.3.into_iter())
+                .chain(vecs.1)
+                .chain(vecs.2)
+                .chain(vecs.3)
                 .collect::<Vec<Timestamp>>();
             assert_eq!(NB_TIME * 4, all_times.len());
             all_times.sort();
