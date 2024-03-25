@@ -13,7 +13,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-uhlc = "0.6"
+uhlc = "0.7"
 ```
 
 Then in your code:
