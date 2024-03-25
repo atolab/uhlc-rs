@@ -56,7 +56,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(transparent)]
-pub struct ID(NonZeroU128);
+pub struct ID([u8; ID::MAX_SIZE]);
 
 impl ID {
     /// The maximum size of an le-encoded [`ID`](`ID`) in bytes: 16.
@@ -65,7 +65,7 @@ impl ID {
     /// The size of this [`ID`](`ID`) in bytes. I.e., the number of significant bytes of the le-encoded [`ID`](`ID`).
     #[inline]
     pub fn size(&self) -> usize {
-        Self::MAX_SIZE - (self.0.get().to_le().leading_zeros() as usize / 8)
+        Self::MAX_SIZE - (u128::from_le_bytes(self.0).leading_zeros() as usize / 8)
     }
 
     /// This ID as bytes
@@ -82,17 +82,15 @@ impl ID {
     /// ```
     #[inline]
     pub fn to_le_bytes(&self) -> [u8; Self::MAX_SIZE] {
-        self.0.get().to_le_bytes()
+        self.0
     }
 
     /// Generate a random [`ID`](`ID`).
     #[inline]
     pub fn rand() -> Self {
         use rand::rngs::OsRng;
-        // Safety: 0 is not a valid ID. Here, we explicitly generate
-        //         the ID starting from 1. So, new_unchecked() is safe.
-        let id = unsafe { NonZeroU128::new_unchecked(OsRng.gen_range(1..u128::MAX)) };
-        Self(id)
+        let id: u128 = OsRng.gen_range(1..u128::MAX);
+        Self(id.to_le_bytes())
     }
 }
 
@@ -125,7 +123,7 @@ macro_rules! impl_from_sized_slice_for_id {
                 id[..$N].copy_from_slice(value);
                 let id = u128::from_le_bytes(id);
                 match NonZeroU128::new(id) {
-                    Some(id) => Ok(Self(id)),
+                    Some(_) => Ok(Self(id.to_le_bytes())),
                     None => Err(SizeError(0)),
                 }
             }
@@ -173,7 +171,7 @@ impl TryFrom<&[u8]> for ID {
         id[..size].copy_from_slice(slice);
         let id = u128::from_le_bytes(id);
         match NonZeroU128::new(id) {
-            Some(id) => Ok(Self(id)),
+            Some(_) => Ok(Self(id.to_le_bytes())),
             None => Err(SizeError(0)),
         }
     }
@@ -189,7 +187,7 @@ impl TryFrom<u8> for ID {
 
 impl From<NonZeroU8> for ID {
     fn from(id: NonZeroU8) -> Self {
-        Self(id.into())
+        NonZeroU128::from(id).into()
     }
 }
 
@@ -203,7 +201,7 @@ impl TryFrom<u16> for ID {
 
 impl From<NonZeroU16> for ID {
     fn from(id: NonZeroU16) -> Self {
-        Self(id.into())
+        NonZeroU128::from(id).into()
     }
 }
 
@@ -217,7 +215,7 @@ impl TryFrom<u32> for ID {
 
 impl From<NonZeroU32> for ID {
     fn from(id: NonZeroU32) -> Self {
-        Self(id.into())
+        NonZeroU128::from(id).into()
     }
 }
 
@@ -231,7 +229,7 @@ impl TryFrom<u64> for ID {
 
 impl From<NonZeroU64> for ID {
     fn from(id: NonZeroU64) -> Self {
-        Self(id.into())
+        NonZeroU128::from(id).into()
     }
 }
 
@@ -245,7 +243,7 @@ impl TryFrom<u128> for ID {
 
 impl From<NonZeroU128> for ID {
     fn from(id: NonZeroU128) -> Self {
-        Self(id)
+        Self(id.get().to_le_bytes())
     }
 }
 
@@ -282,7 +280,7 @@ pub struct ParseIDError {
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let id = self.0.get();
+        let id = u128::from_le_bytes(self.0);
         let s = format!("{:02x}", id);
         let t = s.as_str().strip_prefix('0').unwrap_or(s.as_str());
         write!(f, "{}", t)
