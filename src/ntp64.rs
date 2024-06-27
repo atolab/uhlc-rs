@@ -17,7 +17,6 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "std")]
 use {
     core::str::FromStr,
-    humantime::{format_rfc3339_nanos, parse_rfc3339},
     std::time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -210,16 +209,17 @@ impl SubAssign<u64> for NTP64 {
 
 impl fmt::Display for NTP64 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        #[cfg(feature = "std")]
-        return write!(f, "{}", format_rfc3339_nanos(self.to_system_time()));
-        #[cfg(not(feature = "std"))]
-        return write!(f, "{:x}", self.0);
+        write!(f, "{}", self.0)
+        // #[cfg(feature = "std")]
+        // return write!(f, "{}", format_rfc3339_nanos(self.to_system_time()));
+        // #[cfg(not(feature = "std"))]
+        // return write!(f, "{:x}", self.0);
     }
 }
 
 impl fmt::Debug for NTP64 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:x}", self.0)
+        write!(f, "{}", self.0)
     }
 }
 
@@ -237,17 +237,9 @@ impl FromStr for NTP64 {
     type Err = ParseNTP64Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        parse_rfc3339(s)
-            .map_err(|e| ParseNTP64Error {
-                cause: e.to_string(),
-            })
-            .and_then(|time| {
-                time.duration_since(UNIX_EPOCH)
-                    .map_err(|e| ParseNTP64Error {
-                        cause: e.to_string(),
-                    })
-            })
-            .map(NTP64::from)
+        u64::from_str(s).map(NTP64).map_err(|_| ParseNTP64Error {
+            cause: format!("Invalid NTP64 time : '{s}' (must be a u64)"),
+        })
     }
 }
 

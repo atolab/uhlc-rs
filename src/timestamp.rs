@@ -143,4 +143,23 @@ mod tests {
         let diff = ts1_now.get_diff_duration(&ts2_now);
         assert_eq!(diff, Duration::from_secs(0));
     }
+
+    #[test]
+    fn bijective_string_conversion() {
+        use crate::*;
+        use std::convert::TryFrom;
+        use std::str::FromStr;
+        let id: ID = ID::try_from([0x01]).unwrap();
+
+        for n in 0u64..10000 {
+            let ts = Timestamp::new(NTP64(n), id);
+            assert_eq!(ts, Timestamp::from_str(&ts.to_string()).unwrap());
+        }
+
+        let hlc = HLCBuilder::new().with_id(ID::rand()).build();
+        for _ in 1..1000 {
+            let now_ts = hlc.new_timestamp();
+            assert_eq!(now_ts, Timestamp::from_str(&now_ts.to_string()).unwrap());
+        }
+    }
 }
