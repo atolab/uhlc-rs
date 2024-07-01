@@ -25,11 +25,11 @@ use core::str::FromStr;
 ///   - Such conversion is lossless and thus bijective.
 ///   - Timestamp to String: use [`std::fmt::Display::fmt()`] or [`std::string::ToString::to_string()`].
 ///   - String to Timestamp: use [`std::str::FromStr::from_str()`]
-/// 2. **as a [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.8) (human readable) format**:
+/// 2. **`<ntp64_time>`as a [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.8) (human readable) format**:
 ///   - Such conversion loses some precision because of rounding when conferting the fraction part to nanoseconds
-///   - As a consequence it's not bijective: a NTP64 converted to RFC3339 String and then converted back to NTP64 might result to a different time.
-///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`NTP64::to_string_rfc3339()`].
-///   - String to Timestamp: use [`NTP64::parse_rfc3339()`]
+///   - As a consequence it's not bijective: a Timestamp converted to RFC3339 String and then converted back to Timestamp might result to a different time.
+///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`Timestamp::to_string_rfc3339()`].
+///   - String to Timestamp: use [`Timestamp::parse_rfc3339()`]
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timestamp {
