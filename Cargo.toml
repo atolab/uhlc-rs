@@ -52,3 +52,4 @@ spin = { version = "0.9.8", default-features = false, features = [
 [dev-dependencies]
 async-std = "1.6"
 futures = "0.3"
+regex = "1"
