@@ -17,6 +17,19 @@ use serde::{Deserialize, Serialize};
 use core::str::FromStr;
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
+///
+/// ## Conversion to/from String
+/// A Timestamp is formatted to a String as such:  `"<ntp64_time>/<hlc_id_hexadecimal>"`
+/// 2 different String representations are supported:
+/// 1. **`<ntp64_time>` as an unsigned integer in decimal format**
+///   - Such conversion is lossless and thus bijective.
+///   - Timestamp to String: use [`std::fmt::Display::fmt()`] or [`std::string::ToString::to_string()`].
+///   - String to Timestamp: use [`std::str::FromStr::from_str()`]
+/// 2. **as a [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.8) (human readable) format**:
+///   - Such conversion loses some precision because of rounding when conferting the fraction part to nanoseconds
+///   - As a consequence it's not bijective: a NTP64 converted to RFC3339 String and then converted back to NTP64 might result to a different time.
+///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`NTP64::to_string_rfc3339()`].
+///   - String to Timestamp: use [`NTP64::parse_rfc3339()`]
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timestamp {
@@ -48,11 +61,53 @@ impl Timestamp {
     pub fn get_diff_duration(&self, other: &Timestamp) -> Duration {
         (self.time - other.time).to_duration()
     }
+
+    /// Convert to a RFC3339 time representation with nanoseconds precision.
+    /// e.g.: `"2024-07-01T13:51:12.129693000Z/33"``
+    pub fn to_string_rfc3339(&self) -> String {
+        #[cfg(feature = "std")]
+        return format!("{:#}", self);
+        #[cfg(not(feature = "std"))]
+        return self.to_string();
+    }
+
+    /// Parse a RFC3339 time representation into a NTP64.
+    pub fn parse_rfc3339(s: &str) -> Result<Self, ParseTimestampError> {
+        match s.find('/') {
+            Some(i) => {
+                let (stime, srem) = s.split_at(i);
+                let time = NTP64::parse_rfc3339(stime)
+                    .map_err(|e| ParseTimestampError { cause: e.cause })?;
+                let id =
+                    ID::from_str(&srem[1..]).map_err(|e| ParseTimestampError { cause: e.cause })?;
+                Ok(Timestamp::new(time, id))
+            }
+            None => Err(ParseTimestampError {
+                cause: "No '/' found in String".into(),
+            }),
+        }
+    }
 }
 
 impl fmt::Display for Timestamp {
+    /// Formats Timestamp as the time part followed by the ID part, with `/` as separator.  
+    /// By default the time part is formatted as an unsigned integer in decimal format.  
+    /// If the alternate flag `{:#}` is used, the time part is formatted with RFC3339 representation with nanoseconds precision.
+    ///
+    /// # Examples
+    /// ```
+    ///   use uhlc::*;
+    ///
+    ///   let t =Timestamp::new(NTP64(7386690599959157260), ID::try_from([0x33]).unwrap());
+    ///   println!("{t}");    // displays: 7386690599959157260/33
+    ///   println!("{t:#}");  // displays: 2024-07-01T15:32:06.860479000Z/33
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}/{}", self.time, self.id)
+        if f.alternate() {
+            write!(f, "{:#}/{}", self.time, self.id)
+        } else {
+            write!(f, "{}/{}", self.time, self.id)
+        }
     }
 }
 
@@ -145,19 +200,12 @@ mod tests {
     }
 
     #[test]
-    fn bijective_string_conversion() {
+    fn bijective_to_string() {
         use crate::*;
-        use std::convert::TryFrom;
         use std::str::FromStr;
-        let id: ID = ID::try_from([0x01]).unwrap();
-
-        for n in 0u64..10000 {
-            let ts = Timestamp::new(NTP64(n), id);
-            assert_eq!(ts, Timestamp::from_str(&ts.to_string()).unwrap());
-        }
 
         let hlc = HLCBuilder::new().with_id(ID::rand()).build();
-        for _ in 1..1000 {
+        for _ in 1..10000 {
             let now_ts = hlc.new_timestamp();
             assert_eq!(now_ts, Timestamp::from_str(&now_ts.to_string()).unwrap());
         }
