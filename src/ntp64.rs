@@ -337,14 +337,22 @@ mod tests {
     #[test]
     fn to_string_rfc3339() {
         use crate::*;
+        use regex::Regex;
+
+        let rfc3339_regex = Regex::new(
+            r"^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]Z$"
+        ).unwrap();
+
         let now = SystemTime::now();
-        let t = NTP64::from(SystemTime::now().duration_since(UNIX_EPOCH).unwrap());
+        let t = NTP64::from(now.duration_since(UNIX_EPOCH).unwrap());
 
         let rfc3339 = t.to_string_rfc3339();
         assert_eq!(rfc3339, humantime::format_rfc3339_nanos(now).to_string());
+        assert!(rfc3339_regex.is_match(&rfc3339));
 
         // Test that alternate format "{:#}" displays in RFC3339 format
         let rfc3339_2 = format!("{t:#}");
         assert_eq!(rfc3339_2, humantime::format_rfc3339_nanos(now).to_string());
+        assert!(rfc3339_regex.is_match(&rfc3339_2));
     }
 }

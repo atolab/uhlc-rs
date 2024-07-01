@@ -97,6 +97,7 @@ impl fmt::Display for Timestamp {
     /// # Examples
     /// ```
     ///   use uhlc::*;
+    ///   use std::convert::TryFrom;
     ///
     ///   let t =Timestamp::new(NTP64(7386690599959157260), ID::try_from([0x33]).unwrap());
     ///   println!("{t}");    // displays: 7386690599959157260/33
