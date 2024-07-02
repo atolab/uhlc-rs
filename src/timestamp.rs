@@ -64,6 +64,7 @@ impl Timestamp {
 
     /// Convert to a RFC3339 time representation with nanoseconds precision.
     /// e.g.: `"2024-07-01T13:51:12.129693000Z/33"``
+    #[cfg(feature = "std")]
     pub fn to_string_rfc3339(&self) -> String {
         #[cfg(feature = "std")]
         return format!("{:#}", self);
@@ -72,6 +73,7 @@ impl Timestamp {
     }
 
     /// Parse a RFC3339 time representation into a NTP64.
+    #[cfg(feature = "std")]
     pub fn parse_rfc3339(s: &str) -> Result<Self, ParseTimestampError> {
         match s.find('/') {
             Some(i) => {

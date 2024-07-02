@@ -118,14 +118,13 @@ impl NTP64 {
 
     /// Convert to a RFC3339 time representation with nanoseconds precision.
     /// e.g.: `"2024-07-01T13:51:12.129693000Z"``
+    #[cfg(feature = "std")]
     pub fn to_string_rfc3339(&self) -> String {
-        #[cfg(feature = "std")]
-        return format_rfc3339_nanos(self.to_system_time()).to_string();
-        #[cfg(not(feature = "std"))]
-        return self.0.to_string();
+        format_rfc3339_nanos(self.to_system_time()).to_string()
     }
 
     /// Parse a RFC3339 time representation into a NTP64.
+    #[cfg(feature = "std")]
     pub fn parse_rfc3339(s: &str) -> Result<Self, ParseNTP64Error> {
         match humantime::parse_rfc3339(s) {
             Ok(time) => time
