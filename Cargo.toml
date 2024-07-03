@@ -10,7 +10,7 @@
 #
 [package]
 name = "uhlc"
-version = "0.7.0"
+version = "0.8.0"
 description = """
 A Unique Hybrid Logical Clock for Rust.
 """
