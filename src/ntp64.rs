@@ -59,12 +59,12 @@ const NANO_PER_SEC: u64 = 1_000_000_000;
 /// 2. **as a [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.8) (human readable) format**:
 ///   - Such conversion loses some precision because of rounding when conferting the fraction part to nanoseconds
 ///   - As a consequence it's not bijective: a NTP64 converted to RFC3339 String and then converted back to NTP64 might result to a different time.
-///   - NTP64 to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`NTP64::to_string_rfc3339()`].
+///   - NTP64 to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`NTP64::to_string_rfc3339_lossy()`].
 ///   - String to NTP64: use [`NTP64::parse_rfc3339()`]
 ///
 /// ## On EPOCH
 /// This timestamp in actually similar to a [`std::time::Duration`], as it doesn't define an EPOCH.  
-/// Only [`NTP64::to_system_time()`], [`NTP64::to_string_rfc3339()`] and [`std::fmt::Display::fmt()`] (when using `{:#}` alternate flag)
+/// Only [`NTP64::to_system_time()`], [`NTP64::to_string_rfc3339_lossy()`] and [`std::fmt::Display::fmt()`] (when using `{:#}` alternate flag)
 /// operations assume that it's relative to UNIX_EPOCH (1st Jan 1970) to display the timestamp in RFC-3339 format.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -119,7 +119,7 @@ impl NTP64 {
     /// Convert to a RFC3339 time representation with nanoseconds precision.
     /// e.g.: `"2024-07-01T13:51:12.129693000Z"``
     #[cfg(feature = "std")]
-    pub fn to_string_rfc3339(&self) -> String {
+    pub fn to_string_rfc3339_lossy(&self) -> String {
         format_rfc3339_nanos(self.to_system_time()).to_string()
     }
 
@@ -326,15 +326,18 @@ mod tests {
     #[test]
     fn bijective_to_string() {
         use crate::*;
+        use rand::prelude::*;
         use std::str::FromStr;
-        for n in 0u64..10000 {
-            let t = NTP64(n);
+
+        let mut rng = rand::thread_rng();
+        for _ in 0u64..10000 {
+            let t = NTP64(rng.gen());
             assert_eq!(t, NTP64::from_str(&t.to_string()).unwrap());
         }
     }
 
     #[test]
-    fn to_string_rfc3339() {
+    fn rfc3339_conversion() {
         use crate::*;
         use regex::Regex;
 
@@ -345,7 +348,7 @@ mod tests {
         let now = SystemTime::now();
         let t = NTP64::from(now.duration_since(UNIX_EPOCH).unwrap());
 
-        let rfc3339 = t.to_string_rfc3339();
+        let rfc3339 = t.to_string_rfc3339_lossy();
         assert_eq!(rfc3339, humantime::format_rfc3339_nanos(now).to_string());
         assert!(rfc3339_regex.is_match(&rfc3339));
 

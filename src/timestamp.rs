@@ -28,7 +28,7 @@ use core::str::FromStr;
 /// 2. **`<ntp64_time>`as a [RFC3339](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.8) (human readable) format**:
 ///   - Such conversion loses some precision because of rounding when conferting the fraction part to nanoseconds
 ///   - As a consequence it's not bijective: a Timestamp converted to RFC3339 String and then converted back to Timestamp might result to a different time.
-///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`Timestamp::to_string_rfc3339()`].
+///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`Timestamp::to_string_rfc3339_lossy()`].
 ///   - String to Timestamp: use [`Timestamp::parse_rfc3339()`]
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -65,7 +65,7 @@ impl Timestamp {
     /// Convert to a RFC3339 time representation with nanoseconds precision.
     /// e.g.: `"2024-07-01T13:51:12.129693000Z/33"``
     #[cfg(feature = "std")]
-    pub fn to_string_rfc3339(&self) -> String {
+    pub fn to_string_rfc3339_lossy(&self) -> String {
         #[cfg(feature = "std")]
         return format!("{:#}", self);
         #[cfg(not(feature = "std"))]
