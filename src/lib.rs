@@ -292,7 +292,7 @@ impl HLC {
         let msg_time = timestamp.get_time();
         if *msg_time > now && *msg_time - now > self.delta {
             let err_msg = format!(
-                "incoming timestamp from {} exceeding delta {}ms is rejected: {} vs. now: {}",
+                "incoming timestamp from {} exceeding delta {}ms is rejected: {:#} vs. now: {:#}",
                 timestamp.get_id(),
                 self.delta.to_duration().as_millis(),
                 msg_time,
