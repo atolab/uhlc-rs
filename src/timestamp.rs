@@ -142,7 +142,7 @@ impl FromStr for Timestamp {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(deature = "defmt", derive(defmt::Format))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ParseTimestampError {
     pub cause: String,
 }
