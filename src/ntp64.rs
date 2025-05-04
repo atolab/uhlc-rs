@@ -284,6 +284,13 @@ impl From<Duration> for NTP64 {
     }
 }
 
+#[cfg(feature = "nix")]
+impl From<nix::sys::time::TimeSpec> for NTP64 {
+    fn from(ts: nix::sys::time::TimeSpec) -> Self {
+        Self::from(Duration::from(ts))
+    }
+}
+
 #[cfg(feature = "std")]
 impl FromStr for NTP64 {
     type Err = ParseNTP64Error;
@@ -356,5 +363,14 @@ mod tests {
         let rfc3339_2 = format!("{t:#}");
         assert_eq!(rfc3339_2, humantime::format_rfc3339_nanos(now).to_string());
         assert!(rfc3339_regex.is_match(&rfc3339_2));
+    }
+
+    #[test]
+    fn from_timespec() {
+        use super::*;
+        let ts = nix::sys::time::TimeSpec::new(42, 84);
+        let t = NTP64::from(ts);
+        assert_eq!(t.as_secs(), 42);
+        assert_eq!(t.subsec_nanos(), 84);
     }
 }
