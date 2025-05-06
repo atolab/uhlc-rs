@@ -96,6 +96,14 @@ impl NTP64 {
         (self.0 >> 32) as u32
     }
 
+    /// Returns the total duration converted to nanoseconds.
+    #[inline]
+    pub fn as_nanos(&self) -> u64 {
+        let secs_as_nanos = (self.as_secs() as u64) * NANO_PER_SEC;
+        let subsec_nanos = self.subsec_nanos() as u64;
+        secs_as_nanos + subsec_nanos
+    }
+
     /// Returns the 32-bits fraction of second part converted to nanoseconds.
     #[inline]
     pub fn subsec_nanos(&self) -> u32 {
@@ -321,6 +329,13 @@ mod tests {
             epoch_plus_counter_max.as_secs_f64() * (ntp64::NANO_PER_SEC as f64)
         );
         assert!(epoch_plus_counter_max.as_secs_f64() < 0.0000000035f64);
+    }
+
+    #[test]
+    fn as_nanos() {
+        use crate::*;
+        let t = NTP64::from(Duration::new(42, 84));
+        assert_eq!(t.as_nanos(), 42_000_000_084);
     }
 
     #[test]
