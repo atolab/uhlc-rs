@@ -96,10 +96,12 @@ impl NTP64 {
         (self.0 >> 32) as u32
     }
 
-    /// Returns the total number of nanoseconds.
+    /// Returns the total duration converted to nanoseconds.
     #[inline]
     pub fn as_nanos(&self) -> u64 {
-        self.to_duration().as_nanos() as u64
+        let secs_as_nanos = (self.as_secs() as u64) * NANO_PER_SEC;
+        let subsec_nanos = self.subsec_nanos() as u64;
+        secs_as_nanos + subsec_nanos
     }
 
     /// Returns the 32-bits fraction of second part converted to nanoseconds.
