@@ -284,7 +284,7 @@ impl From<Duration> for NTP64 {
     }
 }
 
-#[cfg(feature = "nix")]
+#[cfg(all(feature = "nix", target_family = "unix"))]
 impl From<nix::sys::time::TimeSpec> for NTP64 {
     fn from(ts: nix::sys::time::TimeSpec) -> Self {
         Self::from(Duration::from(ts))
@@ -365,6 +365,7 @@ mod tests {
         assert!(rfc3339_regex.is_match(&rfc3339_2));
     }
 
+    #[cfg(all(feature = "nix", target_family = "unix"))]
     #[test]
     fn from_timespec() {
         use super::*;

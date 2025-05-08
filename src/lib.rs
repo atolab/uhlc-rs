@@ -343,7 +343,7 @@ pub fn system_time_clock() -> NTP64 {
 /// See: https://linux.die.net/man/2/clock_gettime
 ///
 #[inline]
-#[cfg(feature = "nix")]
+#[cfg(all(feature = "nix", target_family = "unix"))]
 pub fn monotonic_time_clock() -> NTP64 {
     let now = nix::time::ClockId::CLOCK_MONOTONIC.now().unwrap();
     NTP64::from(now)
@@ -488,6 +488,7 @@ mod tests {
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
 
+    #[cfg(all(feature = "nix", target_family = "unix"))]
     #[test]
     fn hlc_nix_monotonic() {
         let hlc = HLCBuilder::new().with_clock(monotonic_time_clock).build();
@@ -498,7 +499,7 @@ mod tests {
         std::thread::sleep(Duration::from_nanos(1));
         let t3 = monotonic_time_clock();
 
-        assert!(t2.get_time().to_duration() > t1.to_duration());
-        assert!(t3.to_duration() > t2.get_time().to_duration());
+        assert!(t2.get_time() > &t1);
+        assert!(&t3 > t2.get_time());
     }
 }
