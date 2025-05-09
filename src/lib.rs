@@ -338,6 +338,17 @@ pub fn system_time_clock() -> NTP64 {
     NTP64::from(SystemTime::now().duration_since(UNIX_EPOCH).unwrap())
 }
 
+/// A physical clock relying on CLOCK_MONOTONIC.
+///
+/// See: https://linux.die.net/man/2/clock_gettime
+///
+#[inline]
+#[cfg(all(feature = "nix", target_family = "unix"))]
+pub fn monotonic_time_clock() -> NTP64 {
+    let now = nix::time::ClockId::CLOCK_MONOTONIC.now().unwrap();
+    NTP64::from(now)
+}
+
 /// A dummy clock that returns a NTP64 initialized with the value 0.
 /// Suitable to use in no_std environments where std::time::{SystemTime, UNIX_EPOCH} are not available.
 /// If the feature `std` is disabled, that's the default clock used by an [`HLC`] if [`HLCBuilder::with_clock()`] is not called.
@@ -475,5 +486,20 @@ mod tests {
         let future_time = now_ts.get_time() + NTP64::from(Duration::from_millis(1000));
         let future_ts = Timestamp::new(future_time, id);
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
+    }
+
+    #[cfg(all(feature = "nix", target_family = "unix"))]
+    #[test]
+    fn hlc_nix_monotonic() {
+        let hlc = HLCBuilder::new().with_clock(monotonic_time_clock).build();
+        let t1 = monotonic_time_clock();
+        // Sleep for (CMASK + 1) nanoseconds since HLC clock strips off the lower CMASK bits.
+        std::thread::sleep(Duration::from_nanos(CMASK + 1));
+        let t2 = hlc.new_timestamp();
+        std::thread::sleep(Duration::from_nanos(1));
+        let t3 = monotonic_time_clock();
+
+        assert!(t2.get_time() > &t1);
+        assert!(&t3 > t2.get_time());
     }
 }
