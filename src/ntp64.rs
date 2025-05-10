@@ -108,7 +108,7 @@ impl NTP64 {
     #[inline]
     pub fn subsec_nanos(&self) -> u32 {
         let frac = self.0 & FRAC_MASK;
-        ((frac * NANO_PER_SEC) / FRAC_PER_SEC) as u32
+        (((frac + 1) * NANO_PER_SEC) / FRAC_PER_SEC) as u32
     }
 
     /// Convert to a [`Duration`].
@@ -288,7 +288,7 @@ impl From<Duration> for NTP64 {
         let secs = duration.as_secs();
         assert!(secs <= MAX_NB_SEC);
         let nanos: u64 = duration.subsec_nanos().into();
-        NTP64((secs << 32) + ((nanos * FRAC_PER_SEC) / NANO_PER_SEC) + 1)
+        NTP64((secs << 32) + ((nanos * FRAC_PER_SEC) / NANO_PER_SEC))
     }
 }
 
