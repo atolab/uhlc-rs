@@ -380,6 +380,19 @@ mod tests {
         assert!(rfc3339_regex.is_match(&rfc3339_2));
     }
 
+    #[test]
+    fn duration_conversion() {
+        use super::*;
+
+        let zero = NTP64::from(Duration::ZERO);
+        assert_eq!(zero.as_u64(), 0u64);
+        assert_eq!(zero.as_secs_f64(), 0f64);
+
+        let one_sec = NTP64::from(Duration::from_secs(1));
+        assert_eq!(one_sec.as_u64(), 1u64 << 32);
+        assert_eq!(one_sec.as_secs_f64(), 1f64);
+    }
+
     #[cfg(all(feature = "nix", target_family = "unix"))]
     #[test]
     fn from_timespec() {
