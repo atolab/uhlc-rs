@@ -316,6 +316,7 @@ pub struct ParseNTP64Error {
     pub cause: String,
 }
 
+#[cfg(test)]
 mod tests {
 
     #[test]
