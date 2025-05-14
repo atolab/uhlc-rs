@@ -108,7 +108,7 @@ impl NTP64 {
     #[inline]
     pub fn subsec_nanos(&self) -> u32 {
         let frac = self.0 & FRAC_MASK;
-        ((frac * NANO_PER_SEC) / FRAC_PER_SEC) as u32
+        (((frac + 1) * NANO_PER_SEC) / FRAC_PER_SEC) as u32
     }
 
     /// Convert to a [`Duration`].
@@ -288,7 +288,7 @@ impl From<Duration> for NTP64 {
         let secs = duration.as_secs();
         assert!(secs <= MAX_NB_SEC);
         let nanos: u64 = duration.subsec_nanos().into();
-        NTP64((secs << 32) + ((nanos * FRAC_PER_SEC) / NANO_PER_SEC) + 1)
+        NTP64((secs << 32) + ((nanos * FRAC_PER_SEC) / NANO_PER_SEC))
     }
 }
 
@@ -379,6 +379,19 @@ mod tests {
         let rfc3339_2 = format!("{t:#}");
         assert_eq!(rfc3339_2, humantime::format_rfc3339_nanos(now).to_string());
         assert!(rfc3339_regex.is_match(&rfc3339_2));
+    }
+
+    #[test]
+    fn duration_conversion() {
+        use super::*;
+
+        let zero = NTP64::from(Duration::ZERO);
+        assert_eq!(zero.as_u64(), 0u64);
+        assert_eq!(zero.as_secs_f64(), 0f64);
+
+        let one_sec = NTP64::from(Duration::from_secs(1));
+        assert_eq!(one_sec.as_u64(), 1u64 << 32);
+        assert_eq!(one_sec.as_secs_f64(), 1f64);
     }
 
     #[cfg(all(feature = "nix", target_family = "unix"))]
