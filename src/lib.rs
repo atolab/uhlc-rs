@@ -129,11 +129,11 @@ impl HLCBuilder {
     ///
     /// Constructs a new HLCBuilder for the creation of an [`HLC`], with the following default configuration:
     ///  * a random u128 as HLC identifier.
-    ///   Can be changed calling [`Self::with_id()`].
+    ///    Can be changed calling [`Self::with_id()`].
     ///  * [`system_time_clock()`] as physical clock (i.e. the ).
-    ///   Can be changed calling [`Self::with_clock()`].
+    ///    Can be changed calling [`Self::with_clock()`].
     ///  * 500 millisecond as maximum delta (i.e. the maximum accepted drift for an external timestamp).
-    ///   Can be changed calling [`Self::with_max_delta()`].
+    ///    Can be changed calling [`Self::with_max_delta()`].
     ///
     pub fn new() -> HLCBuilder {
         HLCBuilder::default()
@@ -339,6 +339,9 @@ pub fn system_time_clock() -> NTP64 {
 }
 
 /// A physical clock relying on CLOCK_MONOTONIC.
+///
+/// Note: The time produced by this clock is relative to an unspecified starting point (likely the host boot).
+/// Therefore, comparing and ordering times produced by different instances of this clock on different hosts would probably be meaningless.
 ///
 /// See: https://linux.die.net/man/2/clock_gettime
 ///
