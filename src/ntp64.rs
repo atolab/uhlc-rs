@@ -108,7 +108,8 @@ impl NTP64 {
     #[inline]
     pub fn subsec_nanos(&self) -> u32 {
         let frac = self.0 & FRAC_MASK;
-        (((frac + 1) * NANO_PER_SEC) / FRAC_PER_SEC) as u32
+        // Use div_ceil() here to ensure that: assert_eq!(x, NTP64::from(Duration::from_nanos(x)).as_nanos());
+        (frac * NANO_PER_SEC).div_ceil(FRAC_PER_SEC) as u32
     }
 
     /// Convert to a [`Duration`].
