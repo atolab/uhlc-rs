@@ -158,7 +158,7 @@ impl Add for NTP64 {
     }
 }
 
-impl<'a> Add<NTP64> for &'a NTP64 {
+impl Add<NTP64> for &NTP64 {
     type Output = <NTP64 as Add<NTP64>>::Output;
 
     #[inline]
@@ -210,7 +210,7 @@ impl Sub for NTP64 {
     }
 }
 
-impl<'a> Sub<NTP64> for &'a NTP64 {
+impl Sub<NTP64> for &NTP64 {
     type Output = <NTP64 as Sub<NTP64>>::Output;
 
     #[inline]
