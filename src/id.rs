@@ -263,42 +263,31 @@ pub enum ParseIDError {
     SizeError(SizeError),
 }
 
-struct BufWriter<'a> {
-    buf: &'a mut [u8],
-    pos: usize,
-}
-
-impl<'a> Write for BufWriter<'a> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        let bytes = s.as_bytes();
-        if self.pos + bytes.len() > self.buf.len() {
-            return Err(fmt::Error);
-        }
-        self.buf[self.pos..self.pos + bytes.len()].copy_from_slice(bytes);
-        self.pos += bytes.len();
-        Ok(())
-    }
-}
-
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id = u128::from_le_bytes(self.0);
-        let mut buf = [0u8; 32];
-        let mut writer = BufWriter {
-            buf: &mut buf,
-            pos: 0,
-        };
 
-        write!(&mut writer, "{:02x}", id)?;
+        const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+        let mut leading_zeros = true;
 
-        write!(
-            f,
-            "{}",
-            core::str::from_utf8(&buf)
-                .unwrap()
-                .trim_start_matches('0')
-                .trim_end_matches('\0')
-        )
+        for i in (0..32).rev() {
+            let nibble = ((id >> (i * 4)) & 0xF) as usize;
+            let digit = HEX_DIGITS[nibble];
+
+            if digit == b'0' && leading_zeros && i > 0 {
+                continue;
+            }
+
+            leading_zeros = false;
+
+            f.write_char(digit as char)?;
+        }
+
+        if leading_zeros {
+            f.write_char('0')?;
+        }
+
+        Ok(())
     }
 }
 
