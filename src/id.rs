@@ -8,15 +8,11 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use alloc::{
-    format,
-    string::{String, ToString},
-};
 use core::{
     convert::{TryFrom, TryInto},
-    fmt,
+    fmt::{self, Write},
     hash::Hash,
-    num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8},
+    num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, ParseIntError},
     str::FromStr,
 };
 use rand::Rng;
@@ -94,22 +90,17 @@ impl ID {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SizeError(pub usize);
+
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Maximum ID size ({} bytes) exceeded: {}",
-            ID::MAX_SIZE,
-            self.0
-        )
+        core::fmt::Debug::fmt(self, f)
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for SizeError {}
+impl core::error::Error for SizeError {}
 
 macro_rules! impl_from_sized_slice_for_id {
     ($N: expr) => {
@@ -160,7 +151,7 @@ impl_from_sized_slice_for_id!(16);
 impl TryFrom<&[u8]> for ID {
     type Error = SizeError;
 
-    /// Performs the conversion.  
+    /// Performs the conversion.
     /// NOTE: the bytes slice is interpreted as little endian
     fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
         let size = slice.len();
@@ -252,38 +243,62 @@ impl FromStr for ID {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
-            return Err(ParseIDError {
-                cause: "Empty strings are not valid".to_string(),
-            });
+            return Err(ParseIDError::EmptyStringsNotValid);
         }
 
         if s.starts_with('0') {
-            return Err(ParseIDError {
-                cause: "Leading 0s are not valid".to_string(),
-            });
+            return Err(ParseIDError::LeadingZeroNotValid);
         }
 
-        let bs = u128::from_str_radix(s, 16).map_err(|e| ParseIDError {
-            cause: e.to_string(),
-        })?;
-        ID::try_from(bs).map_err(|e| ParseIDError {
-            cause: e.to_string(),
-        })
+        let bs = u128::from_str_radix(s, 16).map_err(ParseIDError::ParseIntError)?;
+        ID::try_from(bs).map_err(ParseIDError::SizeError)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct ParseIDError {
-    pub cause: String,
+pub enum ParseIDError {
+    EmptyStringsNotValid,
+    LeadingZeroNotValid,
+    ParseIntError(ParseIntError),
+    SizeError(SizeError),
+}
+
+struct BufWriter<'a> {
+    buf: &'a mut [u8],
+    pos: usize,
+}
+
+impl<'a> Write for BufWriter<'a> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        let bytes = s.as_bytes();
+        if self.pos + bytes.len() > self.buf.len() {
+            return Err(fmt::Error);
+        }
+        self.buf[self.pos..self.pos + bytes.len()].copy_from_slice(bytes);
+        self.pos += bytes.len();
+        Ok(())
+    }
 }
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id = u128::from_le_bytes(self.0);
-        let s = format!("{:02x}", id);
-        let t = s.as_str().strip_prefix('0').unwrap_or(s.as_str());
-        write!(f, "{}", t)
+        let mut buf = [0u8; 32];
+        let mut writer = BufWriter {
+            buf: &mut buf,
+            pos: 0,
+        };
+
+        write!(&mut writer, "{:02x}", id)?;
+
+        write!(
+            f,
+            "{}",
+            core::str::from_utf8(&buf)
+                .unwrap()
+                .trim_start_matches('0')
+                .trim_end_matches('\0')
+        )
     }
 }
 
@@ -294,9 +309,11 @@ impl fmt::Display for ID {
 }
 
 mod tests {
+    #[cfg(feature = "std")]
     #[test]
     fn parse_display() {
         let id = "1".parse::<crate::ID>().unwrap();
+
         assert_eq!(id.to_string(), "1");
 
         let id = "1bc0".parse::<crate::ID>().unwrap();
