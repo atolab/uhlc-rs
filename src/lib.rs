@@ -517,7 +517,7 @@ mod tests {
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
 
-    #[cfg(all(feature = "nix", target_family = "unix"))]
+    #[cfg(all(feature = "nix", target_family = "unix", feature = "std"))]
     #[test]
     fn hlc_nix_monotonic() {
         let hlc = HLCBuilder::new().with_clock(monotonic_time_clock).build();
