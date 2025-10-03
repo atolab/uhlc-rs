@@ -8,10 +8,7 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use alloc::{
-    format,
-    string::{String, ToString},
-};
+use alloc::string::{String, ToString};
 use core::{
     convert::{TryFrom, TryInto},
     fmt,
@@ -19,6 +16,7 @@ use core::{
     num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8},
     str::FromStr,
 };
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -280,10 +278,7 @@ pub struct ParseIDError {
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let id = u128::from_le_bytes(self.0);
-        let s = format!("{:02x}", id);
-        let t = s.as_str().strip_prefix('0').unwrap_or(s.as_str());
-        write!(f, "{}", t)
+        write!(f, "{:x}", u128::from_le_bytes(self.0))
     }
 }
 
