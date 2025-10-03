@@ -339,7 +339,8 @@ impl core::fmt::Debug for ExceedingDeltaError {
     }
 }
 
-impl core::error::Error for ExceedingDeltaError {}
+#[cfg(feature = "std")]
+impl std::error::Error for ExceedingDeltaError {}
 
 impl Default for HLC {
     /// Create a new [`HLC`] with a random u128 ID and using
