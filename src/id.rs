@@ -97,7 +97,12 @@ pub struct SizeError(pub usize);
 
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        core::fmt::Debug::fmt(self, f)
+        write!(
+            f,
+            "Maximum ID size ({} bytes) exceeded: {}",
+            ID::MAX_SIZE,
+            self.0
+        )
     }
 }
 
