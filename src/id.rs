@@ -15,6 +15,7 @@ use core::{
     num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, ParseIntError},
     str::FromStr,
 };
+
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
