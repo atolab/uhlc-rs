@@ -10,7 +10,7 @@
 //
 use core::{
     convert::{TryFrom, TryInto},
-    fmt::{self, Write},
+    fmt::{self},
     hash::Hash,
     num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, ParseIntError},
     str::FromStr,
@@ -266,29 +266,7 @@ pub enum ParseIDError {
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let id = u128::from_le_bytes(self.0);
-
-        const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
-        let mut leading_zeros = true;
-
-        for i in (0..32).rev() {
-            let nibble = ((id >> (i * 4)) & 0xF) as usize;
-            let digit = HEX_DIGITS[nibble];
-
-            if digit == b'0' && leading_zeros && i > 0 {
-                continue;
-            }
-
-            leading_zeros = false;
-
-            f.write_char(digit as char)?;
-        }
-
-        if leading_zeros {
-            f.write_char('0')?;
-        }
-
-        Ok(())
+        write!(f, "{:x}", u128::from_le_bytes(self.0))
     }
 }
 
