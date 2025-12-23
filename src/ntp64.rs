@@ -12,7 +12,6 @@ use core::fmt;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::str::FromStr;
 use core::time::Duration;
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "std")]
 use std::time::SystemTimeError;
 
@@ -67,7 +66,8 @@ const NANO_PER_SEC: u64 = 1_000_000_000;
 /// This timestamp in actually similar to a [`std::time::Duration`], as it doesn't define an EPOCH.
 /// Only [`NTP64::to_system_time()`], [`NTP64::to_string_rfc3339_lossy()`] and [`std::fmt::Display::fmt()`] (when using `{:#}` alternate flag)
 /// operations assume that it's relative to UNIX_EPOCH (1st Jan 1970) to display the timestamp in RFC-3339 format.
-#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Default, Deserialize, Serialize)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NTP64(pub u64);
 

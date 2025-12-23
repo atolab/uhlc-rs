@@ -17,7 +17,6 @@ use core::{
 };
 
 use rand::Rng;
-use serde::{Deserialize, Serialize};
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
 /// This struct has a constant memory size (holding internally a `NonZeroU8`),
@@ -50,7 +49,8 @@ use serde::{Deserialize, Serialize};
 /// let id = ID::rand();
 /// assert!(id.size() <= 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(transparent)]
 pub struct ID([u8; ID::MAX_SIZE]);

@@ -12,7 +12,6 @@ use crate::{ParseIDError, ParseNTP64Error};
 //
 use super::{ID, NTP64};
 use core::{fmt, str::FromStr, time::Duration};
-use serde::{Deserialize, Serialize};
 
 /// A timestamp made of a [`NTP64`] and a [`crate::HLC`]'s unique identifier.
 ///
@@ -28,7 +27,8 @@ use serde::{Deserialize, Serialize};
 ///   - As a consequence it's not bijective: a Timestamp converted to RFC3339 String and then converted back to Timestamp might result to a different time.
 ///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`Timestamp::to_string_rfc3339_lossy()`].
 ///   - String to Timestamp: use [`Timestamp::parse_rfc3339()`]
-#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timestamp {
     time: NTP64,
