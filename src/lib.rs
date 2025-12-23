@@ -316,7 +316,7 @@ impl HLC {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct ExceedingDeltaError {
     id: ID,
     duration: u128,
