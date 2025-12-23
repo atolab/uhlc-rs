@@ -9,7 +9,6 @@
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
 use core::fmt;
-use core::num::ParseIntError;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use core::str::FromStr;
 use core::time::Duration;
@@ -142,9 +141,7 @@ impl NTP64 {
                 .duration_since(UNIX_EPOCH)
                 .map(NTP64::from)
                 .map_err(ParseNTP64Error::SystemTimeError),
-            Err(e) => Err(ParseNTP64Error::InvalidRFC3339(format!(
-                "{e}: failed to parse '{s}'. Invalid RFC3339 format"
-            ))),
+            Err(_) => Err(ParseNTP64Error::InvalidRFC3339),
         }
     }
 }
@@ -306,23 +303,18 @@ impl FromStr for NTP64 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         u64::from_str(s)
             .map(NTP64)
-            .map_err(ParseNTP64Error::ParseIntError)
+            .map_err(|_| ParseNTP64Error::ParseIntError)
     }
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ParseNTP64Error {
-    ParseIntError(ParseIntError),
+    ParseIntError,
     #[cfg(feature = "std")]
     SystemTimeError(SystemTimeError),
     #[cfg(feature = "std")]
-    InvalidRFC3339(String),
-}
-
-impl core::fmt::Display for ParseNTP64Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        core::fmt::Debug::fmt(self, f)
-    }
+    InvalidRFC3339,
 }
 
 #[cfg(test)]

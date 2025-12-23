@@ -26,7 +26,7 @@ edition = "2018"
 
 [features]
 default = ["std"]
-std = ["humantime", "lazy_static", "log", "serde/std", "rand/std", "defmt/alloc", "rand/alloc", "serde/alloc"]
+std = ["humantime", "lazy_static", "log", "serde/std", "rand/std"]
 defmt = ["dep:defmt"]                                              # Enables defmt for logging in no_std
 nix = ["dep:nix"]
 

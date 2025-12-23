@@ -316,6 +316,7 @@ impl HLC {
     }
 }
 
+#[derive(Debug)]
 pub struct ExceedingDeltaError {
     id: ID,
     duration: u128,
@@ -324,12 +325,6 @@ pub struct ExceedingDeltaError {
 }
 
 impl core::fmt::Display for ExceedingDeltaError {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        core::fmt::Debug::fmt(self, f)
-    }
-}
-
-impl core::fmt::Debug for ExceedingDeltaError {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(
             f,

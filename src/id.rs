@@ -12,7 +12,7 @@ use core::{
     convert::{TryFrom, TryInto},
     fmt::{self},
     hash::Hash,
-    num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, ParseIntError},
+    num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8},
     str::FromStr,
 };
 
@@ -257,16 +257,17 @@ impl FromStr for ID {
             return Err(ParseIDError::LeadingZeroNotValid);
         }
 
-        let bs = u128::from_str_radix(s, 16).map_err(ParseIDError::ParseIntError)?;
+        let bs = u128::from_str_radix(s, 16).map_err(|_| ParseIDError::ParseIntError)?;
         ID::try_from(bs).map_err(ParseIDError::SizeError)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ParseIDError {
     EmptyStringsNotValid,
     LeadingZeroNotValid,
-    ParseIntError(ParseIntError),
+    ParseIntError,
     SizeError(SizeError),
 }
 

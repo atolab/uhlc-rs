@@ -132,6 +132,7 @@ impl FromStr for Timestamp {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ParseTimestampError {
     NoDashSeparator,
     ParseNTP64Error(ParseNTP64Error),
