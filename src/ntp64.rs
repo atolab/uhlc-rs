@@ -16,6 +16,9 @@ use core::time::Duration;
 use std::time::SystemTimeError;
 
 #[cfg(feature = "std")]
+use humantime::TimestampError;
+
+#[cfg(feature = "std")]
 use {
     humantime::format_rfc3339_nanos,
     std::time::{SystemTime, UNIX_EPOCH},
@@ -141,7 +144,7 @@ impl NTP64 {
                 .duration_since(UNIX_EPOCH)
                 .map(NTP64::from)
                 .map_err(ParseNTP64Error::SystemTimeError),
-            Err(_) => Err(ParseNTP64Error::InvalidRFC3339),
+            Err(e) => Err(ParseNTP64Error::InvalidRFC3339(e)),
         }
     }
 }
@@ -314,7 +317,7 @@ pub enum ParseNTP64Error {
     #[cfg(feature = "std")]
     SystemTimeError(SystemTimeError),
     #[cfg(feature = "std")]
-    InvalidRFC3339,
+    InvalidRFC3339(TimestampError),
 }
 
 #[cfg(test)]
