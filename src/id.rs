@@ -97,12 +97,16 @@ pub struct SizeError(pub usize);
 
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Maximum ID size ({} bytes) exceeded: {}",
-            ID::MAX_SIZE,
-            self.0
-        )
+        if self.0 == 0 {
+            write!(f, "0 is not a valid ID")
+        } else {
+            write!(
+                f,
+                "Maximum ID size  of {} bytes exceeded: {} bytes",
+                ID::MAX_SIZE,
+                self.0
+            )
+        }
     }
 }
 
@@ -270,6 +274,20 @@ pub enum ParseIDError {
     ParseIntError,
     SizeError(SizeError),
 }
+
+impl fmt::Display for ParseIDError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseIDError::EmptyStringsNotValid => write!(f, "Invalid ID (empty string)"),
+            ParseIDError::LeadingZeroNotValid => write!(f, "Invalid ID (leading with '0')"),
+            ParseIDError::ParseIntError => write!(f, "Invalid ID (not an unsigned integer)"),
+            ParseIDError::SizeError(e) => write!(f, "Invalid ID ({e})"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseIDError {}
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

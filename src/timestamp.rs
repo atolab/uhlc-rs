@@ -139,6 +139,21 @@ pub enum ParseTimestampError {
     ParseIDError(ParseIDError),
 }
 
+impl fmt::Display for ParseTimestampError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseTimestampError::NoDashSeparator => {
+                write!(f, "No '/' separator found between time and ID parts")
+            }
+            ParseTimestampError::ParseNTP64Error(e) => write!(f, "Error parsing time part: {e:?}"),
+            ParseTimestampError::ParseIDError(e) => write!(f, "Error parsing ID part: {e:?}"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseTimestampError {}
+
 #[cfg(test)]
 mod tests {
     use crate::*;

@@ -320,6 +320,23 @@ pub enum ParseNTP64Error {
     InvalidRFC3339(TimestampError),
 }
 
+impl fmt::Display for ParseNTP64Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseNTP64Error::ParseIntError => {
+                write!(f, "Invalid NTP6 time (not an unsigned 64 bits integer)")
+            }
+            #[cfg(feature = "std")]
+            ParseNTP64Error::SystemTimeError(e) => write!(f, "Invalid NTP6 time ({e})"),
+            #[cfg(feature = "std")]
+            ParseNTP64Error::InvalidRFC3339(e) => write!(f, "Invalid NTP6 time ({e})"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseNTP64Error {}
+
 #[cfg(test)]
 mod tests {
 
