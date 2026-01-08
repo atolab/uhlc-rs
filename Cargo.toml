@@ -10,7 +10,7 @@
 #
 [package]
 name = "uhlc"
-version = "0.8.2"
+version = "0.9.0"
 description = """
 A Unique Hybrid Logical Clock for Rust.
 """
@@ -25,31 +25,22 @@ authors = ["Julien Enoch <julien.enoch@adlinktech.com>"]
 edition = "2018"
 
 [features]
-default = ["std"]
-std = ["humantime", "lazy_static", "log", "serde/std", "rand/std"]
+default = ["std", "serde"]
+serde = ["dep:serde"]
+std = ["humantime", "lazy_static", "log", "rand/std"]
 defmt = ["dep:defmt"]                                              # Enables defmt for logging in no_std
 nix = ["dep:nix"]
 
 [dependencies]
-defmt = { version = "1.0", features = [
-    "alloc",
-], optional = true } # Replaces log in no_std
+defmt = { version = "1.0", optional = true } # Replaces log in no_std
 humantime = { version = "2.2", optional = true }
 lazy_static = { version = "1.5", optional = true }
 log = { version = "0.4", optional = true } # Used only in std
-nix = { version = "0.30.0", optional = true, default-features = false, features = ["time"] }
-rand = { version = "0.8.5", default-features = false, features = [
-    "alloc",
-    "getrandom",
-] }
-serde = { version = "1.0", default-features = false, features = [
-    "alloc",
-    "derive",
-] }
-spin = { version = "0.10", default-features = false, features = [
-    "mutex",
-    "spin_mutex",
-] } # No_std alternative for std::sync::Mutex
+nix = { version = "0.30.0", default-features = false, features = ["time"], optional = true }
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
+
+rand = { version = "0.8.5", default-features = false, features = ["getrandom"] }
+spin = { version = "0.10", default-features = false, features = ["mutex", "spin_mutex"] } # No_std alternative for std::sync::Mutex
 
 [dev-dependencies]
 async-std = "1.6"

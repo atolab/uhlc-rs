@@ -8,17 +8,15 @@
 //
 // SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
 //
-use alloc::string::{String, ToString};
 use core::{
     convert::{TryFrom, TryInto},
-    fmt,
+    fmt::{self},
     hash::Hash,
     num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8},
     str::FromStr,
 };
 
 use rand::Rng;
-use serde::{Deserialize, Serialize};
 
 /// An identifier for an HLC ([MAX_SIZE](ID::MAX_SIZE) bytes maximum).
 /// This struct has a constant memory size (holding internally a `NonZeroU8`),
@@ -51,7 +49,8 @@ use serde::{Deserialize, Serialize};
 /// let id = ID::rand();
 /// assert!(id.size() <= 16);
 /// ```
-#[derive(Copy, Clone, Eq, Deserialize, Serialize, PartialEq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(transparent)]
 pub struct ID([u8; ID::MAX_SIZE]);
@@ -92,17 +91,22 @@ impl ID {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SizeError(pub usize);
+
 impl fmt::Display for SizeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Maximum ID size ({} bytes) exceeded: {}",
-            ID::MAX_SIZE,
-            self.0
-        )
+        if self.0 == 0 {
+            write!(f, "0 is not a valid ID")
+        } else {
+            write!(
+                f,
+                "Maximum ID size  of {} bytes exceeded: {} bytes",
+                ID::MAX_SIZE,
+                self.0
+            )
+        }
     }
 }
 
@@ -158,7 +162,7 @@ impl_from_sized_slice_for_id!(16);
 impl TryFrom<&[u8]> for ID {
     type Error = SizeError;
 
-    /// Performs the conversion.  
+    /// Performs the conversion.
     /// NOTE: the bytes slice is interpreted as little endian
     fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
         let size = slice.len();
@@ -250,31 +254,40 @@ impl FromStr for ID {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
-            return Err(ParseIDError {
-                cause: "Empty strings are not valid".to_string(),
-            });
+            return Err(ParseIDError::EmptyStringsNotValid);
         }
 
         if s.starts_with('0') {
-            return Err(ParseIDError {
-                cause: "Leading 0s are not valid".to_string(),
-            });
+            return Err(ParseIDError::LeadingZeroNotValid);
         }
 
-        let bs = u128::from_str_radix(s, 16).map_err(|e| ParseIDError {
-            cause: e.to_string(),
-        })?;
-        ID::try_from(bs).map_err(|e| ParseIDError {
-            cause: e.to_string(),
-        })
+        let bs = u128::from_str_radix(s, 16).map_err(|_| ParseIDError::ParseIntError)?;
+        ID::try_from(bs).map_err(ParseIDError::SizeError)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct ParseIDError {
-    pub cause: String,
+pub enum ParseIDError {
+    EmptyStringsNotValid,
+    LeadingZeroNotValid,
+    ParseIntError,
+    SizeError(SizeError),
 }
+
+impl fmt::Display for ParseIDError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseIDError::EmptyStringsNotValid => write!(f, "Invalid ID (empty string)"),
+            ParseIDError::LeadingZeroNotValid => write!(f, "Invalid ID (leading with '0')"),
+            ParseIDError::ParseIntError => write!(f, "Invalid ID (not an unsigned integer)"),
+            ParseIDError::SizeError(e) => write!(f, "Invalid ID ({e})"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ParseIDError {}
 
 impl fmt::Debug for ID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -289,9 +302,11 @@ impl fmt::Display for ID {
 }
 
 mod tests {
+    #[cfg(feature = "std")]
     #[test]
     fn parse_display() {
         let id = "1".parse::<crate::ID>().unwrap();
+
         assert_eq!(id.to_string(), "1");
 
         let id = "1bc0".parse::<crate::ID>().unwrap();

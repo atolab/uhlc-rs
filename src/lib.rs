@@ -51,9 +51,7 @@
     html_root_url = "https://atolab.github.io/uhlc-rs/"
 )]
 #![cfg_attr(not(feature = "std"), no_std)]
-extern crate alloc;
 
-use alloc::{format, string::String};
 use core::cmp;
 use core::time::Duration;
 
@@ -286,23 +284,23 @@ impl HLC {
     /// let ts = hlc1.new_timestamp();
     /// assert!(ts > other_ts);
     /// ```
-    pub fn update_with_timestamp(&self, timestamp: &Timestamp) -> Result<(), String> {
+    pub fn update_with_timestamp(&self, timestamp: &Timestamp) -> Result<(), ExceedingDeltaError> {
         let mut now = (self.clock)();
         now.0 &= LMASK;
         let msg_time = timestamp.get_time();
         if *msg_time > now && *msg_time - now > self.delta {
-            let err_msg = format!(
-                "incoming timestamp from {} exceeding delta {}ms is rejected: {:#} vs. now: {:#}",
-                timestamp.get_id(),
-                self.delta.to_duration().as_millis(),
-                msg_time,
-                now
-            );
+            let err = ExceedingDeltaError {
+                id: *timestamp.get_id(),
+                duration: self.delta.to_duration().as_millis(),
+                msg_time: *msg_time,
+                now,
+            };
+
             #[cfg(feature = "std")]
-            log::warn!("{}", err_msg);
+            log::warn!("{}", err);
             #[cfg(feature = "defmt")]
-            defmt::warn!("{}", err_msg);
-            Err(err_msg)
+            defmt::warn!("{}", err);
+            Err(err)
         } else {
             let mut last_time = lock!(self.last_time);
             let max_time = cmp::max(cmp::max(now, *msg_time), *last_time);
@@ -317,6 +315,27 @@ impl HLC {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ExceedingDeltaError {
+    id: ID,
+    duration: u128,
+    msg_time: NTP64,
+    now: NTP64,
+}
+
+impl core::fmt::Display for ExceedingDeltaError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(
+            f,
+            "incoming timestamp from {} exceeding delta {}ms is rejected: {:#} vs. now: {:#}",
+            self.id, self.duration, self.msg_time, self.now
+        )
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for ExceedingDeltaError {}
 
 impl Default for HLC {
     /// Create a new [`HLC`] with a random u128 ID and using
@@ -364,12 +383,9 @@ pub fn zero_clock() -> NTP64 {
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use async_std::sync::Arc;
-    use async_std::task;
-    use core::convert::TryFrom;
     use core::time::Duration;
-    use futures::join;
 
+    #[cfg(feature = "std")]
     fn is_sorted(vec: &[Timestamp]) -> bool {
         let mut it = vec.iter();
         let mut ts = it.next().unwrap();
@@ -382,9 +398,15 @@ mod tests {
         true
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn hlc_parallel() {
-        use alloc::vec::Vec;
+        use async_std::sync::Arc;
+        use async_std::task;
+        use core::convert::TryFrom;
+        use futures::join;
+        use std::vec::Vec;
+
         task::block_on(async {
             let id0: ID = ID::try_from([0x01]).unwrap();
             let id1: ID = ID::try_from([0x02]).unwrap();
@@ -491,7 +513,7 @@ mod tests {
         assert!(hlc.update_with_timestamp(&future_ts).is_err())
     }
 
-    #[cfg(all(feature = "nix", target_family = "unix"))]
+    #[cfg(all(feature = "nix", target_family = "unix", feature = "std"))]
     #[test]
     fn hlc_nix_monotonic() {
         let hlc = HLCBuilder::new().with_clock(monotonic_time_clock).build();
