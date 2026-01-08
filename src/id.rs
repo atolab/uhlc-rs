@@ -50,7 +50,7 @@ use rand::Rng;
 /// assert!(id.size() <= 16);
 /// ```
 #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(transparent)]
 pub struct ID([u8; ID::MAX_SIZE]);

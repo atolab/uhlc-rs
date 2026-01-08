@@ -70,7 +70,7 @@ const NANO_PER_SEC: u64 = 1_000_000_000;
 /// Only [`NTP64::to_system_time()`], [`NTP64::to_string_rfc3339_lossy()`] and [`std::fmt::Display::fmt()`] (when using `{:#}` alternate flag)
 /// operations assume that it's relative to UNIX_EPOCH (1st Jan 1970) to display the timestamp in RFC-3339 format.
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
-#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct NTP64(pub u64);
 
