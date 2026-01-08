@@ -25,9 +25,8 @@ authors = ["Julien Enoch <julien.enoch@adlinktech.com>"]
 edition = "2018"
 
 [features]
-default = ["std", "serde"]
-serde = ["dep:serde", "serde/std"]
-std = ["humantime", "lazy_static", "log", "rand/std"]
+default = ["std"]
+std = ["humantime", "lazy_static", "log", "rand/std", "dep:serde", "serde/std"]
 defmt = ["dep:defmt"]                                              # Enables defmt for logging in no_std
 nix = ["dep:nix"]
 

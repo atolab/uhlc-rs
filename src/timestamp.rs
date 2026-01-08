@@ -28,7 +28,7 @@ use core::{fmt, str::FromStr, time::Duration};
 ///   - Timestamp to String: use [`std::fmt::Display::fmt()`] with the alternate flag (`{:#}`) or [`Timestamp::to_string_rfc3339_lossy()`].
 ///   - String to Timestamp: use [`Timestamp::parse_rfc3339()`]
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Timestamp {
     time: NTP64,
