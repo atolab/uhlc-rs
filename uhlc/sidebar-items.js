@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["CSIZE"],"fn":["system_time_clock","zero_clock"],"struct":["HLC","HLCBuilder","ID","NTP64","ParseIDError","ParseNTP64Error","ParseTimestampError","SizeError","Timestamp"]};
+window.SIDEBAR_ITEMS = {"constant":["CSIZE"],"enum":["ParseIDError","ParseNTP64Error","ParseTimestampError"],"fn":["system_time_clock","zero_clock"],"struct":["ExceedingDeltaError","HLC","HLCBuilder","ID","NTP64","SizeError","Timestamp"]};
